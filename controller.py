@@ -134,7 +134,7 @@ def ode(s, y, Ux, Uy, EI, GJ, n):  # dydt s>~
     uy = np.zeros((n,1))
 
     # calculating tube's curvatures in x and y direction
-    for i in np.arange(n):  # alpha to curvature                                # 1(c)
+    for i in np.arange(n):  # alpha to curvature                            # 1(c)
         ux[i] = (1/(EI[0]+EI[1]+EI[2])) * (
                 EI[0]*Ux[0]*np.cos(y[n+i]-y[n+0]) + EI[0]*Uy[0]*np.sin(y[n+i]-y[n+0]) +
                 EI[1]*Ux[1]*np.cos(y[n+i]-y[n+1]) + EI[1]*Uy[1]*np.sin(y[n+i]-y[n+1]) +
@@ -150,7 +150,7 @@ def ode(s, y, Ux, Uy, EI, GJ, n):  # dydt s>~
     # odes for twist
     for i in np.arange(n):
         dydt[i] =  ((EI[i])/(GJ[i])) * (ux[i]*Uy[i] -  uy[i]*Ux[i] )  # ui_z  1(d)
-        dydt[n+i] =  y[i]   #   1(e)
+        dydt[n+i] =  y[i]                                                   # 1(e)
 
     e3 = np.array([[0, 0, 1]]).transpose()
     uz = y[0:n]
