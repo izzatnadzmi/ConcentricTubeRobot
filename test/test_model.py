@@ -6,33 +6,42 @@
     Code visualises three-tubed concentric tube continuum robot.
 '''
 
+import os
 import numpy as np 
+import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+import random
+import csv
 import time
+from scipy import stats
+from collections import defaultdict
 from scipy.integrate import solve_ivp
 from mpl_toolkits import mplot3d
 
 
 ## main ode solver
-def moving_CTR(q,uz_0):
+def moving_CTR(q, uz_0):  #, settings):
 
-    l = 1e-3 * np.array([431, 332, 174])                # length of tubes
-    l_k = 1e-3 * np.array([103, 113, 134])              # length of the curved part of tubes
+    # (l, l_k, E, J, I, G, Ux, Uy, n) = settings
+
+    l = 1e-3 * np.array([300, 300, 300])                # length of tubes
+    l_k = 1e-3 * np.array([100, 100, 100])              # length of the curved part of tubes
 
     # physical parameters
-    E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
-    J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])    # J second moment of inertia
-    I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])    # I inertia
-    G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
+    E = np.array([ 5e+10, 5e+10, 5e+10])   # E stiffness
+    J = 1.0e-11 * np.array([0.0653, 0.0653, 0.0653])    # J second moment of inertia
+    I = 1.0e-12 * np.array([0.0601, 0.0601, 0.0601])    # I inertia
+    G = np.array([2.5091302912e+10, 2.5091302912e+10, 2.5091302912e+10] )   # G torsion constant
 
-    Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
-    Uy = np.array([0, 0, 0])
+    Ux = np.array([10, 10, 10])                  # constant U curvature vectors for each tubes
+    Uy = np.array([10, 10, 10])
     n = 3
 
     # q1 to q3 are robot base movments, q3 to q6 are robot base rotation angles.
     uz0 = uz_0.copy()  #TODO: uz_0 column check
 
-    q_0 = np.array([-0.2858, -0.2025, -0.0945, 0, 0, 0])
+    q_0 = np.array([0, 0, 0, 0, 0, 0])
     B = np.array([q[0]+q_0[0], q[1]+q_0[1], q[2]+q_0[2]])   # length of tubes before template
 
     #initial angles
@@ -109,9 +118,9 @@ def moving_CTR(q,uz_0):
         Uz[i] = U_z[index, i]  # .copy()?
 
     r1 = r.copy()
-    tube2_end = np.argmin(np.abs(Length-d_tip[1]))
+    tube2_end = np.argmin(np.abs(Length-d_tip[1])) + 1
     r2 = np.array([r[0:tube2_end,0], r[0:tube2_end,1], r[0:tube2_end,2]]).transpose()
-    tube3_end = np.argmin(np.abs(Length-d_tip[2]))
+    tube3_end = np.argmin(np.abs(Length-d_tip[2])) + 1
     r3 = np.array([r[0:tube3_end,0], r[0:tube3_end,1], r[0:tube3_end,2]]).transpose()
 
     return (r1, r2, r3, Uz)
@@ -230,39 +239,102 @@ def segmenting(E,Ux,Uy,l,B,l_k):  # -> [L,d1,E,Ux,Uy,I,G,J]
 
 
 def plot_3D(ax, r1, r2, r3, label_str=''):
-    ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)
-    ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2)
-    ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3)
+    ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1)
+    ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2, linestyle='--')
+    ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3, linestyle=':', label=label_str)
     ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
 
+
+def rad(deg):
+    return deg*(np.pi/180)
 
 if __name__ == "__main__":
 
     fig = plt.figure()
     ax = plt.axes(projection='3d')
 
+    # l = 1e-3 * np.array([300, 300, 300])                # length of tubes
+    # l_k = 1e-3 * np.array([100, 100, 100])              # length of the curved part of tubes
+
+    # # physical parameters
+    # E = np.array([ 5e+10, 5e+10, 5e+10])   # E stiffness
+    # J = 1.0e-11 * np.array([0.0653, 0.0653, 0.0653])    # J second moment of inertia
+    # I = 1.0e-12 * np.array([0.0601, 0.0601, 0.0601])    # I inertia
+    # G = np.array([2.5091302912e+10, 2.5091302912e+10, 2.5091302912e+10] )   # G torsion constant
+
+    # Ux = np.array([10, 10, 10])                  # constant U curvature vectors for each tubes
+    # Uy = np.array([10, 10, 10])
+    # n = 3
+
+    # settings = (l, l_k, E, J, I, G, Ux, Uy, n)
+
     start_time = time.time()
     # initial value of twist
     uz_0 = np.array([[0, 0, 0]]).transpose()
-    q = np.array([0, 0, 0, 0, 0, 0])  #inputs [BBBaaa]
-     
+    q = np.array([0, 0, 0, 0, 0, 0])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
     print(" Execution time: %s seconds " % (time.time() - start_time))
-    plot_3D(ax, r1, r2, r3, 'tube1')
+    plot_3D(ax, r1, r2, r3, 'tube all 0')
+
+    print('r1', r1,'\nr2', r2,'\nr3', r3,'\nUz', Uz)
+
+    q = np.array([0, 0, 0, rad(120), rad(120), rad(120)])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
+    plot_3D(ax, r1, r2, r3, 'all 2pi/3')
+
+    q = np.array([0, 0, 0, rad(240), rad(240), rad(240)])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
+    plot_3D(ax, r1, r2, r3, 'all -2pi/3')
+
+    q = np.array([0, 0, 0, 0, rad(120), rad(240)])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
+    plot_3D(ax, r1, r2, r3, '0, pi, -pi')
 
     ax.legend()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z ')
+    # plt.axis('equal')
+    # ax.set_aspect('equal')
+
+    # Create cubic bounding box to simulate equal aspect ratio
+    max_range = 0.3  # np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
+    Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(0)  # X.max()+X.min())
+    Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(0)  # Y.max()+Y.min())
+    Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(0.3)  # Z.max()+Z.min())
+    # Comment or uncomment following both lines to test the fake bounding box:
+    for xb, yb, zb in zip(Xb, Yb, Zb):
+        ax.plot([xb], [yb], [zb], 'w')
+
     plt.show()
 
 
-
     # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
-    # q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs
-    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
-    # plot_3D(ax, r1, r2, r3, 'tube2')
-
-    # q = np.array([0, 0, 0, 0, np.pi, 0])  #inputs
-    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
-    # plot_3D(ax, r1, r2, r3, 'tube3')
 
     # q = np.array([0, 0, 0, 0, 0, np.pi])  #inputs
     # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
-    # plot_3D(ax, r1, r2, r3, 'tube4')
+    # plot_3D(ax, r1, r2, r3, 'tube3')
+
+    # q = np.array([0, 0, 0, 0, np.pi, 0])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    # plot_3D(ax, r1, r2, r3, 'tube2')
+
+    # q = np.array([0, 0, 0, np.pi, 0, 0])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    # plot_3D(ax, r1, r2, r3, 'tube1')
+
+    # q = np.array([0, 0, 0, 180, 180, 180])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0, settings)
+    # plot_3D(ax, r1, r2, r3, 'tube.all.180')
+
+    # q = np.array([0, 0, 0, 360, 360, 360])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0, settings)
+    # plot_3D(ax, r1, r2, r3, 'tube.all.360')
+
+    # q = np.array([0, 0, 0, -np.pi, -np.pi, -np.pi])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0, settings)
+    # plot_3D(ax, r1, r2, r3, 'tube.all-')
+
+    # q = np.array([0, 100, 0, np.pi, np.pi, np.pi])  #inputs
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0, settings)
+    # plot_3D(ax, r1, r2, r3, 'tube.all+')
