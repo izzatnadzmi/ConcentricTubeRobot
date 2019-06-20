@@ -244,25 +244,27 @@ if __name__ == "__main__":
     start_time = time.time()
     # initial value of twist
     uz_0 = np.array([[0, 0, 0]]).transpose()
-    q = np.array([0, 0, 0, 0, 0, 0])  #inputs [BBBaaa]
-     
-    print(" Execution time: %s seconds " % (time.time() - start_time))
-    plot_3D(ax, r1, r2, r3, 'tube1')
+    # q = np.array([0, 0, 0, 0, 0, 0])  #inputs [BBBaaa]
+    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    # print(" Execution time: %s seconds " % (time.time() - start_time))
+    # print('Uz:\n', Uz)
+    # plot_3D(ax, r1, r2, r3, 'tube1')
 
-    ax.legend()
-    plt.show()
-
-
+    # ax.legend()
+    # plt.show()
 
     # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
-    # q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs
-    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    print('Uz:\n', Uz)
     # plot_3D(ax, r1, r2, r3, 'tube2')
 
-    # q = np.array([0, 0, 0, 0, np.pi, 0])  #inputs
-    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    q = np.array([0, 0, 0, 0, np.pi, 0])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    print('Uz:\n', Uz)
     # plot_3D(ax, r1, r2, r3, 'tube3')
 
-    # q = np.array([0, 0, 0, 0, 0, np.pi])  #inputs
-    # (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    q = np.array([0, 0, 0, 0, 0, np.pi])  #inputs
+    (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
+    print('Uz:\n', Uz)
     # plot_3D(ax, r1, r2, r3, 'tube4')

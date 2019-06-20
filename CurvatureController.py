@@ -22,8 +22,8 @@ class Jacobian(object):
     def dxdq(self, qq):
         # return xx.transpose() * qq
         (r1,r2,r3,Uz) = self.model(qq, self.uz_0)
-        xx = np.array(r1[-1])                           # TODO: check!
-        return xx
+        # xx = np.array(r1[-1])                               # TODO: check!
+        return Uz
 
     def f(self, qq):
         return np.array([self.dxdq(qq)], dtype = np.float)
