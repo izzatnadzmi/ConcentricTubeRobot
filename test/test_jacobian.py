@@ -81,7 +81,7 @@ def main():
         q_vel = np.zeros((6, time_stamp))  # [BBBaaa]
         x_vel = np.zeros((3, time_stamp))  # [r]
 
-    if quintic:
+    if quintic_fn:
         a1_coeffs = [[], []]
         a2_coeffs = [[], []]
         a3_coeffs = [[], []]
@@ -104,7 +104,7 @@ def main():
     while i <= time_stamp-1:
         # runtime = time.time()
         x = np.zeros(3)  # just for size TODO: change to just integer
-        if quintic:
+        if quintic_fn:
             q_model_pos[3, i] = quintic.calculate_position(a1_coeffs[0], t)
             q_model_pos[4, i] = quintic.calculate_position(a2_coeffs[0], t)
             q_model_pos[5, i] = quintic.calculate_position(a3_coeffs[0], t)
@@ -120,7 +120,7 @@ def main():
         x_model_pos[:, i] = np.array(r1[-1])
 
         if jac_test:
-            if quintic:
+            if quintic_fn:
                 q_vel[3, i] = quintic.calculate_velocity(a1_coeffs[0], t)
                 q_vel[4, i] = quintic.calculate_velocity(a2_coeffs[0], t)
                 q_vel[5, i] = quintic.calculate_velocity(a3_coeffs[0], t)
@@ -181,14 +181,14 @@ def main():
 
     plt.subplots(1)
     tt = np.arange(0.0, total_time, dt)
-    if quintic:
+    if quintic_fn:
         plt.plot(tt, quintic.calculate_position(a1_coeffs[0], tt))
     else:
         plt.plot(tt, alpha_position(tt, total_time))
     plt.title('Tube Rotation (rad)')
 
     plt.subplots(1)
-    if quintic:
+    if quintic_fn:
         plt.plot(tt, quintic.calculate_velocity(a1_coeffs[0], tt))
     else:
         plt.plot(tt, alpha_velocity(tt, total_time))
@@ -198,5 +198,27 @@ def main():
 
 if __name__ == "__main__":
     jac_test = True
-    quintic = True
+    quintic_fn = True
     main()
+
+    # #  all B (0 -> 0), all alpha (0 -> 2pi/3) 
+    # waypoints = [[0.042224, -0.042224, 0.269772], [0.015457, 0.057684, 0.269762]]
+    # b1_coeffs = []
+    # b2_coeffs = []
+    # b3_coeffs = []
+    # a1_coeffs = []
+    # a2_coeffs = []
+    # a3_coeffs = []
+    # total_time = 5
+
+    # for i in range(len(waypoints)):
+    #     traj = TrajectoryGenerator(waypoints[i], waypoints[(i + 1) % len(waypoints)], total_time)
+    #     traj.solve()
+    #     b1_coeffs[i] = traj.x_c
+    #     b2_coeffs[i] = traj.y_c
+    #     b3_coeffs[i] = traj.z_c
+    #     a1_coeffs[i] = traj.a1_c
+    #     a2_coeffs[i] = traj.a2_c
+    #     a3_coeffs[i] = traj.a3_c
+
+    # CTR_sim(b1_coeffs, b2_coeffs, b3_coeffs, a1_coeffs, a2_coeffs, a3_coeffs, total_time)

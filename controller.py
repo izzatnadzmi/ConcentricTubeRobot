@@ -73,5 +73,4 @@ if __name__ == "__main__":
     print('\na * a+ * a == a   -> ', np.allclose(J, np.dot(J, np.dot(J_inv, J))))
     print('\na+ * a * a+ == a+ -> ', np.allclose(J_inv, np.dot(J_inv, np.dot(J, J_inv))))
 
-    
     # q = J_inv * 

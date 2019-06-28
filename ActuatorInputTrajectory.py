@@ -7,30 +7,48 @@
 import numpy as np
 
 class TrajectoryGenerator():
-    def __init__(self, start_pos, des_pos, T, start_vel=[0,0,0], des_vel=[0,0,0], start_acc=[0,0,0], des_acc=[0,0,0]):
+    def __init__(self, start_pos, des_pos, T, start_vel=[0,0,0,0,0,0], des_vel=[0,0,0,0,0,0], start_acc=[0,0,0,0,0,0], des_acc=[0,0,0,0,0,0]):
         self.start_x = start_pos[0]
         self.start_y = start_pos[1]
         self.start_z = start_pos[2]
+        self.start_a1 = start_pos[3]
+        self.start_a2 = start_pos[4]
+        self.start_a3 = start_pos[5]
 
         self.des_x = des_pos[0]
         self.des_y = des_pos[1]
         self.des_z = des_pos[2]
+        self.des_a1 = des_pos[3]
+        self.des_a2 = des_pos[4]
+        self.des_a3 = des_pos[5]
 
         self.start_x_vel = start_vel[0]
         self.start_y_vel = start_vel[1]
         self.start_z_vel = start_vel[2]
+        self.start_a1_vel = start_vel[3]
+        self.start_a2_vel = start_vel[4]
+        self.start_a3_vel = start_vel[5]
 
         self.des_x_vel = des_vel[0]
         self.des_y_vel = des_vel[1]
         self.des_z_vel = des_vel[2]
+        self.des_a1_vel = des_vel[3]
+        self.des_a2_vel = des_vel[4]
+        self.des_a3_vel = des_vel[5]
 
         self.start_x_acc = start_acc[0]
         self.start_y_acc = start_acc[1]
         self.start_z_acc = start_acc[2]
+        self.start_a1_acc = start_acc[3]
+        self.start_a2_acc = start_acc[4]
+        self.start_a3_acc = start_acc[5]
 
         self.des_x_acc = des_acc[0]
         self.des_y_acc = des_acc[1]
         self.des_z_acc = des_acc[2]
+        self.des_a1_acc = des_acc[3]
+        self.des_a2_acc = des_acc[4]
+        self.des_a3_acc = des_acc[5]
 
         self.T = T
 
@@ -72,10 +90,39 @@ class TrajectoryGenerator():
              [self.des_z_acc]
             ])
 
+        b_a1 = np.array(
+            [[self.start_a1],
+             [self.des_a1],
+             [self.start_a1_vel],
+             [self.des_a1_vel],
+             [self.start_a1_acc],
+             [self.des_a1_acc]
+            ])
+
+        b_a2 = np.array(
+            [[self.start_a2],
+             [self.des_a2],
+             [self.start_a2_vel],
+             [self.des_a2_vel],
+             [self.start_a2_acc],
+             [self.des_a2_acc]
+            ])
+
+        b_a3 = np.array(
+            [[self.start_a3],
+             [self.des_a3],
+             [self.start_a3_vel],
+             [self.des_a3_vel],
+             [self.start_a3_acc],
+             [self.des_a3_acc]
+            ])
+
         self.x_c = np.linalg.solve(A, b_x)
         self.y_c = np.linalg.solve(A, b_y)
         self.z_c = np.linalg.solve(A, b_z)
-
+        self.a1_c = np.linalg.solve(A, b_a1)
+        self.a2_c = np.linalg.solve(A, b_a2)
+        self.a3_c = np.linalg.solve(A, b_a3)
 
 class TrajectoryRetreiver():
 
