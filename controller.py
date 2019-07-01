@@ -7,7 +7,10 @@
 '''
 
 import numpy as np
-
+import sys
+sys.path.append("../")
+sys.path.append("./ConcentricTubeRobot/")
+from CTRmodel import moving_CTR
 
 class Jacobian(object):
 
@@ -44,6 +47,7 @@ class Jacobian(object):
     def p_inv(self):
         self.jac_approx()
         jac_inv = np.linalg.pinv(self.J)  # inv(X^T * X) * X^T
+        # jac_inv = np.
         return jac_inv
 
 
@@ -55,12 +59,11 @@ class Controller(object):
 
 if __name__ == "__main__":
 
-    import CTR_model
-    model = lambda q, uz_0: CTR_model.moving_CTR(q, uz_0)
+    model = lambda q, uz_0: moving_CTR(q, uz_0)
 
     uz_0 = np.array([[0, 0, 0]]).transpose()
-    q = np.array([0, 0, 0, 0, np.pi, 0])  # inputs q
-    delta_q = np.ones(6) * 1e-3
+    q = np.array([0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001])  # np.array([0, 0, 0, 0, np.pi, 0])  # inputs q
+    delta_q = np.ones(6) * 1e-1
     x = np.zeros(3)
 
     r_jac = Jacobian(delta_q, x, q, uz_0, model)

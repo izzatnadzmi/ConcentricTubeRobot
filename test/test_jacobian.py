@@ -66,8 +66,8 @@ def main():
     x_model_pos = np.zeros((3, time_stamp))  # [r]
 
     a_ans = 2 * np.pi / 3
-    q_start = np.array([0, 0, 0, 0, 0, 0])
-    q_ans = np.array([0, 0, 0, a_ans, a_ans, a_ans])
+    q_start = np.array([0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001])
+    q_ans = np.array([0.0001, 0.0001, 0.0001, a_ans, a_ans, a_ans])
 
     if jac_test:
         (r1,r2,r3,Uz) = moving_CTR(q_start, uz_0)
