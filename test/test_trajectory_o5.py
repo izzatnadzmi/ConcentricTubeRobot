@@ -32,7 +32,7 @@ def CTR_sim(a1_c, a2_c, a3_c, total_time, q_start, q_end):
     """
     runtime = time.time()
     # total_time =   # (seconds)
-    dt = 0.01
+    dt = 0.1
     time_stamp = int(total_time/dt)
     t = dt
     i = 1
@@ -52,9 +52,10 @@ def CTR_sim(a1_c, a2_c, a3_c, total_time, q_start, q_end):
 
     quintic = TrajectoryRetreiver()
     q_des_pos[:, 0] = q_start
-    x_des_pos[0, i] = quintic.calculate_position(a1_c[0], t)
-    x_des_pos[1, i] = quintic.calculate_position(a2_c[0], t)
-    x_des_pos[2, i] = quintic.calculate_position(a3_c[0], t)
+    x_des_pos[0, 0] = quintic.calculate_position(a1_c[0], t)
+    x_des_pos[1, 0] = quintic.calculate_position(a2_c[0], t)
+    x_des_pos[2, 0] = quintic.calculate_position(a3_c[0], t)
+    x_cur_pos[:, 0] = x_des_pos[:, 0]
 
     while i < time_stamp:
         # runtime = time.time()
@@ -135,7 +136,9 @@ def CTR_sim(a1_c, a2_c, a3_c, total_time, q_start, q_end):
 
     plt.subplots(1)
     tt = np.arange(0.0, total_time, dt)
-    plt.plot(tt, error_d(delta_x.transpose()), label='q_B1')
+    plt.plot(tt, delta_x[0], label='x')
+    plt.plot(tt, delta_x[1], label='y')
+    plt.plot(tt, delta_x[2], label='z')
     plt.title('delta_x')
     plt.legend()
 
