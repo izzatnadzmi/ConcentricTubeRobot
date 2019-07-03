@@ -81,7 +81,7 @@ def main():
         uz0_vel = np.zeros((3, time_stamp))
         Uz_end_x_vel = np.zeros((3, time_stamp))
 
-    if quintic:
+    if quintic_fn:
         a1_coeffs = [[], [], []]
         a2_coeffs = [[], [], []]
         a3_coeffs = [[], [], []]
@@ -99,7 +99,7 @@ def main():
     while i <= time_stamp-1:
         # runtime = time.time()
         x = np.zeros(3)  # just for size TODO: change to just integer
-        if quintic:
+        if quintic_fn:
             uz0_model_pos[0, i] = quintic.calculate_position(a1_coeffs[0], t)
             uz0_model_pos[1, i] = quintic.calculate_position(a2_coeffs[0], t)
             uz0_model_pos[2, i] = quintic.calculate_position(a3_coeffs[0], t)
@@ -112,7 +112,7 @@ def main():
         Uz_end_model_pos[:, i] = Uz.flatten()
 
         if jac_test:
-            if quintic:
+            if quintic_fn:
                 uz0_vel[0, i] = quintic.calculate_velocity(a1_coeffs[0], t)
                 uz0_vel[1, i] = quintic.calculate_velocity(a2_coeffs[0], t)
                 uz0_vel[2, i] = quintic.calculate_velocity(a3_coeffs[0], t)
@@ -144,9 +144,9 @@ def main():
     # (r1,r2,r3,Uz) = moving_CTR(q_ans, uz_0)
     # plot_3D(ax, r1, r2, r3, 'final position')
     ax.legend()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z ')
+    ax.set_xlabel('tube1')
+    ax.set_ylabel('tube2')
+    ax.set_zlabel('tube3')
     # plt.axis('equal')
     # ax.set_aspect('equal')
 
@@ -162,14 +162,14 @@ def main():
 
     plt.subplots(1)
     tt = np.arange(0.0, total_time, dt)
-    if quintic:
+    if quintic_fn:
         plt.plot(tt, quintic.calculate_position(a1_coeffs[0], tt))
     else:
         plt.plot(tt, alpha_position(tt, total_time))
     plt.title('Tube Rotation (rad)')
 
     plt.subplots(1)
-    if quintic:
+    if quintic_fn:
         plt.plot(tt, quintic.calculate_velocity(a1_coeffs[0], tt))
     else:
         plt.plot(tt, alpha_velocity(tt, total_time))
@@ -179,5 +179,5 @@ def main():
 
 if __name__ == "__main__":
     jac_test = True
-    quintic = True
+    quintic_fn = True
     main()
