@@ -21,7 +21,7 @@ from controller import Jacobian
 
 
 # show_animation = True
-Kp_x = np.eye(3) * 8
+Kp_x = np.eye(3) * 5
 Kd_x = np.eye(3) * 0
 Ki_x = np.eye(3) * 0
 
@@ -29,7 +29,7 @@ total_time = 10
 N_ITERATIONS = 100
 search = False
 
-def CTR_sim(a1_c, a2_c, a3_c, q_start, q_end):
+def CTR_sim(a1_c, a2_c, a3_c, q_start, x_end_pos):
     """
     Calculates the necessary thrust and torques for the quadrotor to
     follow the trajectory described by the sets of coefficients
@@ -37,11 +37,11 @@ def CTR_sim(a1_c, a2_c, a3_c, q_start, q_end):
     """
     runtime = time.time()
     # total_time =   # (seconds)
-    dt = 0.05
+    dt = 0.1
     time_stamp = int(total_time/dt)
     t = dt
     i = 1
-    jac_del_q = np.ones(6) * 1e-2
+    jac_del_q = np.ones(6) * 1e-1
     uz_0 = np.array([[0, 0, 0]]).transpose()
 
     model = lambda q, uz_0: moving_CTR(q, uz_0)
@@ -78,7 +78,8 @@ def CTR_sim(a1_c, a2_c, a3_c, q_start, q_end):
         # print('i:', i)
         # print(alpha_position(t, total_time))
 
-        delta_x[:, i] = x_des_pos[:, i] - x_cur_pos[:, i-1]
+        # delta_x[:, i] = x_des_pos[:, i] - x_cur_pos[:, i-1]
+        delta_x[:, i] = x_end_pos - x_cur_pos[:, i-1]
         # delta_v[:, i] = x_des_vel[:, i] - x_des_vel[:, i-1]
         # delta_v[:, i] = (delta_x[:, i] - delta_x[:, i-1])/dt
         integral += delta_x[:, i] * dt
@@ -216,7 +217,7 @@ def main():
 
     print('START des x_cur_pos:', x_cur_pos)
     print('END des x_end_pos:', x_end_pos)
-    CTR_sim(a1_coeffs, a2_coeffs, a3_coeffs, q_start, q_end)
+    CTR_sim(a1_coeffs, a2_coeffs, a3_coeffs, q_start, x_end_pos)
     print('START des q_start:', q_start)
     print('END des q_end:', q_end)
 
