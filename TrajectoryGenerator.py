@@ -77,6 +77,31 @@ class TrajectoryGenerator():
         self.z_c = np.linalg.solve(A, b_z)
 
 
+    def solve_linear(self):
+        A = np.array(
+            [[0, 1],
+             [self.T, 1]
+            ])
+
+        b_x = np.array(
+            [[self.start_x],
+             [self.des_x]
+            ])
+
+        b_y = np.array(
+            [[self.start_y],
+             [self.des_y]
+            ])
+
+        b_z = np.array(
+            [[self.start_z],
+             [self.des_z]
+            ])
+
+        self.x_c = np.linalg.solve(A, b_x)
+        self.y_c = np.linalg.solve(A, b_y)
+        self.z_c = np.linalg.solve(A, b_z)
+
 class TrajectoryRetreiver():
 
 

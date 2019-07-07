@@ -21,7 +21,7 @@ from CTRmodel import plot_3D
 from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver
 from CurvatureController import Jacobian
 
-Kp_Uz = np.eye(3) * 10
+Kp_Uz = np.eye(3) * 22
 
 
 def alpha_position(t, total_time):
@@ -57,8 +57,8 @@ def main():
 
     a_ans = (2*np.pi)/3
     runtime = time.time()
-    total_time = 5  # (seconds)
-    dt = 0.1
+    total_time = 1  # (seconds)
+    dt = 0.05
     time_stamp = int(total_time/dt)
     t = dt
     i = 1
@@ -132,26 +132,26 @@ def main():
         i += 1
 
     print("Done", time.time()-runtime)
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    colors = cm.rainbow(np.linspace(0, 1, len(Uz_end_cur_pos.transpose())))
-    for y, c in zip(Uz_end_cur_pos.transpose(), colors):
-        # plt.scatter(x, y, color=c)
-        ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
-    ax.scatter(Uz_traj_pos[0], Uz_traj_pos[1], Uz_traj_pos[2], linewidth=1, label='Uz_traj_pos', marker='x')
-    # ax.plot3D(Uz_end_cur_pos[0], Uz_end_cur_pos[1], Uz_end_cur_pos[2], linewidth=1, linestyle='--', label='Uz_end_jac')
-    ax.scatter(Uz_end_cur_pos[0, -1], Uz_end_cur_pos[1, -1], Uz_end_cur_pos[2, -1], label=Uz_end_cur_pos[:, -1], marker='o')
+    # fig = plt.figure()
+    # ax = plt.axes(projection='3d')
+    # colors = cm.rainbow(np.linspace(0, 1, len(Uz_end_cur_pos.transpose())))
+    # for y, c in zip(Uz_end_cur_pos.transpose(), colors):
+    #     # plt.scatter(x, y, color=c)
+    #     ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
+    # ax.scatter(Uz_traj_pos[0], Uz_traj_pos[1], Uz_traj_pos[2], linewidth=1, label='Uz_traj_pos', marker='x')
+    # # ax.plot3D(Uz_end_cur_pos[0], Uz_end_cur_pos[1], Uz_end_cur_pos[2], linewidth=1, linestyle='--', label='Uz_end_jac')
+    # ax.scatter(Uz_end_cur_pos[0, -1], Uz_end_cur_pos[1, -1], Uz_end_cur_pos[2, -1], label=Uz_end_cur_pos[:, -1], marker='o')
 
-    print('Final Uz:', Uz_end_cur_pos[:, -1])
+    # print('Final Uz:', Uz_end_cur_pos[:, -1])
 
-    # (r1,r2,r3,Uz) = moving_CTR(q_ans, uz_0)
-    # plot_3D(ax, r1, r2, r3, 'final position')
-    ax.legend()
-    ax.set_xlabel('tube1')
-    ax.set_ylabel('tube2')
-    ax.set_zlabel('tube3')
-    # plt.axis('equal')
-    # ax.set_aspect('equal')
+    # # (r1,r2,r3,Uz) = moving_CTR(q_ans, uz_0)
+    # # plot_3D(ax, r1, r2, r3, 'final position')
+    # ax.legend()
+    # ax.set_xlabel('tube1')
+    # ax.set_ylabel('tube2')
+    # ax.set_zlabel('tube3')
+    # # plt.axis('equal')
+    # # ax.set_aspect('equal')
 
     # # Create cubic bounding box to simulate equal aspect ratio
     # max_range = 0.2  # np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
@@ -164,8 +164,10 @@ def main():
 
     plt.subplots(1)
     tt = np.arange(0.0, total_time, dt)
-    plt.plot(tt, error_d(delta_Uz.transpose()), label='delta Uz')
-    plt.title('uz0_cur_pos')
+    plt.plot(tt, Uz_end_cur_pos[0], label='1')
+    plt.plot(tt, Uz_end_cur_pos[1], label='2')
+    plt.plot(tt, Uz_end_cur_pos[2], label='3')
+    plt.title('Uz_end_cur_pos')
     plt.legend()
 
     # plt.subplots(1)

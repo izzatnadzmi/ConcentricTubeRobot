@@ -78,8 +78,8 @@ def CTR_sim(a1_c, a2_c, a3_c, q_start, x_end_pos):
         # print('i:', i)
         # print(alpha_position(t, total_time))
 
-        # delta_x[:, i] = x_des_pos[:, i] - x_cur_pos[:, i-1]
-        delta_x[:, i] = x_end_pos - x_cur_pos[:, i-1]
+        delta_x[:, i] = x_des_pos[:, i] - x_cur_pos[:, i-1]
+        # delta_x[:, i] = x_end_pos - x_cur_pos[:, i-1]
         # delta_v[:, i] = x_des_vel[:, i] - x_des_vel[:, i-1]
         # delta_v[:, i] = (delta_x[:, i] - delta_x[:, i-1])/dt
         integral += delta_x[:, i] * dt
