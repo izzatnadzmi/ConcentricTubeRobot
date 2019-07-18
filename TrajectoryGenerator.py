@@ -77,7 +77,71 @@ class TrajectoryGenerator():
         self.z_c = np.linalg.solve(A, b_z)
 
 
-    def solve_linear(self):
+    def solve_cubic(self):
+        A = np.array(
+            [[0, 0, 0, 1],
+             [self.T**3, self.T**2, self.T, 1],
+             [0, 0, 1, 0],
+             [3*self.T**2, 2*self.T, 1, 0]
+            ])
+
+        b_x = np.array(
+            [[self.start_x],
+             [self.des_x],
+             [self.start_x_vel],
+             [self.des_x_vel]
+            ])
+
+        b_y = np.array(
+            [[self.start_y],
+             [self.des_y],
+             [self.start_y_vel],
+             [self.des_y_vel]
+            ])
+
+        b_z = np.array(
+            [[self.start_z],
+             [self.des_z],
+             [self.start_z_vel],
+             [self.des_z_vel]
+            ])
+
+        self.x_c = np.linalg.solve(A, b_x)
+        self.y_c = np.linalg.solve(A, b_y)
+        self.z_c = np.linalg.solve(A, b_z)
+
+
+    def solve_quad(self):
+        A = np.array(
+            [[0, 0, 1],
+             [self.T**2, self.T, 1],
+             [2*self.T, 1, 0]
+            ])
+
+        b_x = np.array(
+            [[self.start_x],
+             [self.des_x],
+             [self.des_x_vel]
+            ])
+
+        b_y = np.array(
+            [[self.start_y],
+             [self.des_y],
+             [self.des_y_vel]
+            ])
+
+        b_z = np.array(
+            [[self.start_z],
+             [self.des_z],
+             [self.des_z_vel]
+            ])
+
+        self.x_c = np.linalg.solve(A, b_x)
+        self.y_c = np.linalg.solve(A, b_y)
+        self.z_c = np.linalg.solve(A, b_z)
+
+
+    def solve_lin(self):
         A = np.array(
             [[0, 1],
              [self.T, 1]
@@ -101,6 +165,7 @@ class TrajectoryGenerator():
         self.x_c = np.linalg.solve(A, b_x)
         self.y_c = np.linalg.solve(A, b_y)
         self.z_c = np.linalg.solve(A, b_z)
+
 
 class TrajectoryRetreiver():
 
@@ -148,3 +213,118 @@ class TrajectoryRetreiver():
                 Acceleration
         """
         return 20 * c[0] * t**3 + 12 * c[1] * t**2 + 6 * c[2] * t + 2 * c[3]
+
+
+class TrajectoryRetreiverCubic():
+
+    def calculate_position(self, c, t):
+        return c[0] * t**3 + c[1] * t**2 + c[2] * t + c[3]
+
+
+    def calculate_velocity(self, c, t):
+        return 3 * c[0] * t**2 + 2 * c[1] * t + c[2]
+
+
+class TrajectoryRetreiverQuad():
+
+    def calculate_position(self, c, t):
+        return c[0] * t**2 + c[1] * t + c[2]
+
+
+    def calculate_velocity(self, c, t):
+        return 2 * c[0] * t + c[1]
+
+
+class TrajectoryRetreiverLin():
+
+    def calculate_position(self, c, t):
+        return c[0] * t + c[1]
+
+
+    def calculate_velocity(self, c, t):
+        return c[0]
+
+
+if __name__ == "__main__":
+
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    from mpl_toolkits.mplot3d import Axes3D
+    from CTRmodel import moving_CTR, plot_3D
+
+    a_ans = (2*np.pi)/4
+    total_time = 1
+    dt=0.01
+    Uzdt=0.05
+    UzControl=False
+    jac_del_q=1e-3
+    Kp_x = 13
+
+
+    model = lambda q,uz:moving_CTR(q,uz)
+
+    q_start = np.array([0.0001, 0.0001, 0.0001, a_ans/2, a_ans/2, a_ans/2])  # a_ans, a_ans, a_ans
+    q_end = np.array([0.0001, 0.0001, 0.0001, a_ans, a_ans, a_ans])  # ([1.0001, -1.0001, 0.7001, a_ans + 0.2, a_ans + 0.2, a_ans + 0.2])
+
+    # q_start = np.array([-0.06235794, -0.00409771, 0.02960726, 0.14837708, 0.22618857, 0.09228618])
+    # q_end = np.array([-0.19746493, -0.00637689, 0.00991869, 0.17226557, 1.68673423, -0.22740581])
+    uz_0 = np.array([[0, 0, 0]]).transpose()
+
+    (r1,r2,r3,Uz) = model(q_start, uz_0)
+    x_cur_pos = r1[-1]
+    (r1e,r2e,r3e,Uze) = model(q_end, uz_0)
+    x_end_pos = r1e[-1]
+
+    # x_cur_pos = [0.0, -0.07, 0.1]
+    # x_end_pos = [0.05, 0.05, 0.1]
+    # waypoints = [[0.0, 0.0, 0.0], [a_ans, a_ans, a_ans]]
+    waypoints = [x_cur_pos, x_end_pos]
+    a1_coeffs = []
+    a2_coeffs = []
+    a3_coeffs = []
+
+    for x in range(len(waypoints)):
+        traj = TrajectoryGenerator(waypoints[x], waypoints[(x + 1) % len(waypoints)], total_time)
+        traj.solve_lin()
+        # traj.solve()
+        a1_coeffs.append(traj.x_c)
+        a2_coeffs.append(traj.y_c)
+        a3_coeffs.append(traj.z_c)
+
+    t = 0
+    i = 0
+    t_steps = int(total_time/dt)
+    x_des_vel = np.zeros((3, t_steps))  # [r]
+    x_des_pos = np.zeros((3, t_steps))  # [r]
+
+    while t < total_time:
+
+        quintic = TrajectoryRetreiverLin()
+        # quintic = TrajectoryRetreiver()
+        x_des_pos[0, i] = quintic.calculate_position(a1_coeffs[0], t)
+        x_des_pos[1, i] = quintic.calculate_position(a2_coeffs[0], t)
+        x_des_pos[2, i] = quintic.calculate_position(a3_coeffs[0], t)
+        x_des_vel[0, i] = quintic.calculate_velocity(a1_coeffs[0], t)
+        x_des_vel[1, i] = quintic.calculate_velocity(a2_coeffs[0], t)
+        x_des_vel[2, i] = quintic.calculate_velocity(a3_coeffs[0], t)
+        
+        t += dt
+        i += 1
+
+    tt = np.arange(0.0, total_time, dt)
+
+    plt.subplots(1)
+    plt.plot(tt, x_des_vel[0, :], label='x')
+    plt.plot(tt, x_des_vel[1, :], label='y')
+    plt.plot(tt, x_des_vel[2, :], label='z')
+    plt.title('x_des_vel trajectory')
+    plt.legend()
+
+    plt.subplots(1)
+    plt.plot(tt, x_des_pos[0, :], label='x')
+    plt.plot(tt, x_des_pos[1, :], label='y')
+    plt.plot(tt, x_des_pos[2, :], label='z')
+    plt.title('x_des_pos trajectory')
+    plt.legend()
+
+    plt.show()

@@ -1,9 +1,9 @@
 """
-Simulate a CTR following a 3D trajectory
+    Simulate a CTR following a 3D trajectory
 
-Author: Izzat Kamarudzaman
+    Author: Izzat Kamarudzaman
 
-Adapted from code by Python Robotics, Daniel Ingram (daniel-s-ingram)
+    Adapted from code by Python Robotics, Daniel Ingram (daniel-s-ingram)
 """
 
 import numpy as np

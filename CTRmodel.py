@@ -230,10 +230,14 @@ def segmenting(E,Ux,Uy,l,B,l_k):  # -> [L,d1,E,Ux,Uy,I,G,J]
 
 
 def plot_3D(ax, r1, r2, r3, label_str=''):
-    ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)
+    if len(label_str)>1:
+        ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)
+    else:
+        ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1)
     ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2)
     ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3)
-    ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
+    if len(label_str)>1:
+        ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
 
 
 if __name__ == "__main__":
@@ -248,10 +252,10 @@ if __name__ == "__main__":
     (r1,r2,r3,Uz) = moving_CTR(q, uz_0)
     # print(" Execution time: %s seconds " % (time.time() - start_time))
     print('Uz:\n', Uz)
-    # plot_3D(ax, r1, r2, r3, 'tube1')
+    plot_3D(ax, r1, r2, r3, 'tube1')
 
-    # ax.legend()
-    # plt.show()
+    ax.legend()
+    plt.show()
 
     # # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
     # q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs

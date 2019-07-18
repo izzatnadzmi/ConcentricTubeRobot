@@ -18,8 +18,8 @@ from mpl_toolkits.mplot3d import Axes3D
 # from ConcentricTubeRobot.CTR_model import moving_CTR
 from CTRmodel import moving_CTR
 from CTRmodel import plot_3D
-from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver
-from CurvatureController import Jacobian
+from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver, TrajectoryRetreiverCubic
+from CurvatureController import UzJacobian
 
 Kp_Uz = np.eye(3) * 22
 
@@ -58,7 +58,7 @@ def main():
     a_ans = (2*np.pi)/3
     runtime = time.time()
     total_time = 1  # (seconds)
-    dt = 0.05
+    dt = 0.1
     time_stamp = int(total_time/dt)
     t = dt
     i = 1
@@ -91,12 +91,12 @@ def main():
 
         for x in range(len(waypoints)):
             traj = TrajectoryGenerator(waypoints[x], waypoints[(x + 1) % len(waypoints)], total_time)
-            traj.solve()
+            traj.solve_cubic()
             a1_coeffs[x] = traj.x_c
             a2_coeffs[x] = traj.y_c
             a3_coeffs[x] = traj.z_c
 
-        quintic = TrajectoryRetreiver()
+        quintic = TrajectoryRetreiverCubic()
 
     while i <= time_stamp-1:
         # runtime = time.time()
@@ -118,7 +118,7 @@ def main():
         delta_Uz[:, i] = Uz_traj_pos[:, i] - Uz_end_cur_pos[:, i-1]
 
         # get trajectory from Jacobian
-        r_jac = Jacobian(jac_delta_uz, x_dim, q_static, uz0_cur_pos[:, i-1], model)
+        r_jac = UzJacobian(jac_delta_uz, x_dim, q_static, uz0_cur_pos[:, i-1], model)
         J_inv = r_jac.p_inv()
         delta_uz0[:, i] = J_inv @ (Uz_traj_vel[:, i] + Kp_Uz @ delta_Uz[:, i])
 
@@ -170,20 +170,20 @@ def main():
     plt.title('Uz_end_cur_pos')
     plt.legend()
 
-    # plt.subplots(1)
-    # tt = np.arange(0.0, total_time, dt)
-    # if quintic_fn:
-    #     plt.plot(tt, quintic.calculate_position(a1_coeffs[0], tt))
-    # else:
-    #     plt.plot(tt, alpha_position(tt, total_time))
-    # plt.title('uz0 pos trajectory')
+    plt.subplots(1)
+    tt = np.arange(0.0, total_time, dt)
+    if quintic_fn:
+        plt.plot(tt, quintic.calculate_position(a1_coeffs[0], tt))
+    else:
+        plt.plot(tt, alpha_position(tt, total_time))
+    plt.title('uz0 pos trajectory')
 
-    # plt.subplots(1)
-    # if quintic_fn:
-    #     plt.plot(tt, quintic.calculate_velocity(a1_coeffs[0], tt))
-    # else:
-    #     plt.plot(tt, alpha_velocity(tt, total_time))
-    # plt.title('uz0 vel trajectory')
+    plt.subplots(1)
+    if quintic_fn:
+        plt.plot(tt, quintic.calculate_velocity(a1_coeffs[0], tt))
+    else:
+        plt.plot(tt, alpha_velocity(tt, total_time))
+    plt.title('uz0 vel trajectory')
 
     plt.show()
 

@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from CTRmodel import moving_CTR
 from CTRmodel import plot_3D
-from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver
+from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver, TrajectoryRetreiverLin
 
 
 class UzJacobian(object):
@@ -56,9 +56,9 @@ class UzJacobian(object):
 
 class UzController(object):
 
-    def __init__(self, q, uz0=0, Kp_Uz=22, total_time=1, dt=0.05, 
+    def __init__(self, q, uz0=0, Kp_Uz=5, total_time=1, dt=0.1, 
             model=lambda q,uz:moving_CTR(q,uz), 
-            jac_delta_uz=1e-1):
+            jac_delta_uz=1e-1, plot=False):
         self.q = q
         self.model = model
         self.Kp_Uz = np.eye(3) * Kp_Uz
@@ -66,12 +66,13 @@ class UzController(object):
         self.dt = dt
         self.jac_delta_uz = np.ones(3) * jac_delta_uz
         self.t_steps = int(self.total_time/self.dt)
+        self.plot = plot
 
     def run(self):
         t = self.dt
         i = 1
         Uz_traj_pos = np.zeros((3, self.t_steps))
-        uz0_start = np.array([[0.0, 0.0, 0.0]]).transpose()
+        uz0_start = np.array([0.0, 0.0, 0.0])  # [].transpose()
 
         uz0_cur_pos = np.zeros((3, self.t_steps))
         Uz_end_cur_pos = np.zeros((3, self.t_steps))
@@ -91,12 +92,12 @@ class UzController(object):
 
         x = 0  # for x in range(len(waypoints)):
         traj_gen = TrajectoryGenerator(waypoints[x], waypoints[(x + 1) % len(waypoints)], self.total_time)
-        traj_gen.solve()  # just 'solve' for quintic
+        traj_gen.solve_lin()  # just 'solve' for quintic
         a1_coeffs[x] = traj_gen.x_c
         a2_coeffs[x] = traj_gen.y_c
         a3_coeffs[x] = traj_gen.z_c
 
-        traj = TrajectoryRetreiver()
+        traj = TrajectoryRetreiverLin()
 
         while i <= self.t_steps-1:
             # runtime = time.time()
@@ -125,35 +126,37 @@ class UzController(object):
             t += self.dt
             i += 1
 
-        # plt.subplots(1)
-        # tt = np.arange(0.0, self.total_time, self.dt)
-        # plt.plot(tt, Uz_end_cur_pos[0], label='1')
-        # plt.plot(tt, Uz_end_cur_pos[1], label='2')
-        # plt.plot(tt, Uz_end_cur_pos[2], label='3')
-        # plt.title('Uz_end_cur_pos')
-        # plt.legend()
+        # print('Uz_end_cur_pos', Uz_end_cur_pos[:, -1])
+        if self.plot:
+            plt.subplots(1)
+            tt = np.arange(0.0, self.total_time, self.dt)
+            plt.plot(tt, Uz_end_cur_pos[0], label='1')
+            plt.plot(tt, Uz_end_cur_pos[1], label='2')
+            plt.plot(tt, Uz_end_cur_pos[2], label='3')
+            plt.title('Uz_end_cur_pos')
+            plt.legend()
 
-        # # plt.subplots(1)
-        # # tt = np.arange(0.0, self.total_time, self.dt)
-        # # plt.plot(tt, traj.calculate_position(a1_coeffs[0], tt))
-        # # plt.plot(tt, traj.calculate_position(a2_coeffs[0], tt))
-        # # plt.plot(tt, traj.calculate_position(a3_coeffs[0], tt))
-        # # plt.title('uz0 pos trajectory')
+            # # plt.subplots(1)
+            # # tt = np.arange(0.0, self.total_time, self.dt)
+            # # plt.plot(tt, traj.calculate_position(a1_coeffs[0], tt))
+            # # plt.plot(tt, traj.calculate_position(a2_coeffs[0], tt))
+            # # plt.plot(tt, traj.calculate_position(a3_coeffs[0], tt))
+            # # plt.title('uz0 pos trajectory')
 
-        # plt.subplots(1)
-        # plt.plot(tt, traj.calculate_velocity(a1_coeffs[0], tt))
-        # plt.plot(tt, traj.calculate_velocity(a2_coeffs[0], tt))
-        # plt.plot(tt, traj.calculate_velocity(a3_coeffs[0], tt))
-        # plt.title('uz0 vel trajectory')
+            # plt.subplots(1)
+            # plt.plot(tt, traj.calculate_velocity(a1_coeffs[0], tt))
+            # plt.plot(tt, traj.calculate_velocity(a2_coeffs[0], tt))
+            # plt.plot(tt, traj.calculate_velocity(a3_coeffs[0], tt))
+            # plt.title('uz0 vel trajectory')
 
         return uz0_cur_pos[:, -1]
 
     def Uz_controlled_model(self):
-        runtime = time.time()
-        controlled_uz0 = self.run()
-        xxx = self.model(self.q, controlled_uz0)
-        print("UzRunTime:", time.time()-runtime)
-        return xxx
+        # runtime = time.time()
+        controlled_uz0 = self.run() 
+        # xxx = self.model(self.q, controlled_uz0)
+        # print("UzRunTime:", time.time()-runtime)
+        return self.model(self.q, controlled_uz0)
 
     # def calculate_position(self, c, t):
     #     return t + c[0]
@@ -174,7 +177,7 @@ if __name__ == "__main__":
     # uz0_cont = UzController(q_static)
     # uz0_new = uz0_cont.run()
 
-    (r1,r2,r3,Uz) = UzController(q_static, uz0_start).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
+    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.1).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
     plot_3D(ax, r1, r2, r3, 'final position')
 
     # # Create cubic bounding box to simulate equal aspect ratio

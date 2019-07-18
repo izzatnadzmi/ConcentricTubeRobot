@@ -3,7 +3,7 @@
     Python Version: 3.7.2
     Adapted from Matlab code by Mohsen Khadem
 
-    Code visualises three-tubed concentric tube continuum robot.
+    Code for a three-tubed concentric tube continuum robot model.
 '''
 
 import numpy as np 
@@ -93,8 +93,8 @@ class CTRobotModel(object):
 
             y_0 = np.vstack([y0_2, y0_1]).flatten()  # shape: (18,) [u, alpha, r, R]
 
-            EI = E[:,seg] * I.transpose()
-            GJ = G * J
+            EI = E[:,seg] * self.I.transpose()
+            GJ = self.G * self.J
             ode_sols = solve_ivp(lambda s,y: self.ode(s,y,Ux[:,seg],Uy[:,seg],EI,GJ,self.n), s_span, y_0, method='RK23')
             s = ode_sols.t[:, np.newaxis]
             y = ode_sols.y.transpose()
@@ -253,30 +253,31 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # initial value of twist
-    uz_0 = np.array([0.1, 0.1])  # .transpose()
-    q = np.array([0, 0, 0, 0])  #inputs [BBBaaa]
+    uz_0 = np.array([0.0, 0.0, 0.0])  # .transpose()
+    q = np.array([0, 0, 0, np.pi, np.pi, 0])  #inputs [BBBaaa]
 
-    no_of_tubes = 2
-    tubes_length =[431, 332]
-    curve_length=[103, 113]
-    initial_q = [-0.2858, -0.2025, 0, 0]
+
+    # no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
+    initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
+    tubes_length =[431, 332, 174]
+    curve_length=[103, 113, 134]
     tubes_length = 1e-3 * np.array(tubes_length)                # length of tubes
     curve_length = 1e-3 * np.array(curve_length)              # length of the curved part of tubes
 
     # physical parameters
-    E = np.array([ 6.4359738368e+10, 5.2548578304e+10])   # E stiffness
-    J = 1.0e-11 * np.array([0.0120, 0.0653])    # J second moment of inertia
-    I = 1.0e-12 * np.array([0.0601, 0.3267])    # I inertia
-    G = np.array([2.5091302912e+10, 2.1467424256e+10] )   # G torsion constant
+    E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
+    J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])    # J second moment of inertia
+    I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])    # I inertia
+    G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
 
-    Ux = np.array([21.3, 13.108])                  # constant U curvature vectors for each tubes
-    Uy = np.array([0, 0])
+    Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
+    Uy = np.array([0, 0, 0])
 
-    ctr = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
+    ctr = CTRobotModel(3, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
 
     (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
 
-    # print(" Execution time: %s seconds " % (time.time() - start_time))
+    print(" Execution time: %s seconds " % (time.time() - start_time))
     print('Uz:\n', Uz)
     # plot_3D(ax, r1, r2, r3, 'tube1')
 
