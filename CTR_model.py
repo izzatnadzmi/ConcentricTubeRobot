@@ -21,7 +21,7 @@ class CTRobotModel(object):
         self.n = no_of_tubes
         self.tubes_length = np.array(tubes_length)               # length of tubes
         self.curve_length = np.array(curve_length)               # length of the curved part of tubes
-        self.q_0 = np.array(initial_q)                                  # [BBBaaa]
+        self.q_0 = np.array(initial_q)                           # [BBBaaa]
 
         # physical parameters
         self.E = np.array(E)    # E stiffness
@@ -29,7 +29,7 @@ class CTRobotModel(object):
         self.I = np.array(I)    # I inertia
         self.G = np.array(G)    # G torsion constant
 
-        self.Ux = np.array(Ux)                                  # constant U curvature vectors for each tubes
+        self.Ux = np.array(Ux)                                   # constant U curvature vectors for each tubes
         self.Uy = np.array(Uy)
 
 
@@ -40,8 +40,8 @@ class CTRobotModel(object):
         uz_0 = np.array(uz_0)
 
         # q1 to q3 are robot base movments, q3 to q6 are robot base rotation angles.
-        uz0 = uz_0.copy()                       #TODO: uz_0 column check
-        B = q[:self.n] + self.q_0[:self.n]                # length of tubes before template
+        uz0 = uz_0.copy()                               # TODO: uz_0 column check
+        B = q[:self.n] + self.q_0[:self.n]              # length of tubes before template
 
         #initial angles
         alpha = (q[-self.n:] + self.q_0[-self.n:]) - B * uz0  # .transpose()  TODO????
@@ -67,7 +67,7 @@ class CTRobotModel(object):
             Uy[i,:] = UUy[i,SS+np.min(B)>0]
 
         ## Vectors of tube abssica starting at zero
-        span   = np.hstack((0, S))       
+        span   = np.hstack((0, S))
         Length = np.array([], dtype=np.int64).reshape(0,1)
         r      = np.array([], dtype=np.int64).reshape(0,3)
         U_z    = np.array([], dtype=np.int64).reshape(0,3)  # solved length, curvatures, and twist angles
@@ -244,6 +244,15 @@ def plot_3D(ax, r1, r2, r3, label_str=''):
     ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3)
     ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
 
+    # Create cubic bounding box to simulate equal aspect ratio
+    max_range = 0.2  # np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
+    Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(0)    # X.max()+X.min())
+    Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(0)    # Y.max()+Y.min())
+    Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(0.3)  # Z.max()+Z.min())
+    # Comment or uncomment following both lines to test the fake bounding box:
+    for xb, yb, zb in zip(Xb, Yb, Zb):
+        ax.plot([xb], [yb], [zb], 'w')
+
 
 if __name__ == "__main__":
 
@@ -254,8 +263,7 @@ if __name__ == "__main__":
 
     # initial value of twist
     uz_0 = np.array([0.0, 0.0, 0.0])  # .transpose()
-    q = np.array([0, 0, 0, np.pi, np.pi, 0])  #inputs [BBBaaa]
-
+    q = np.array([.2, 0, 0, np.pi, np.pi, np.pi])  #inputs [BBBaaa]
 
     # no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
     initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
@@ -279,10 +287,10 @@ if __name__ == "__main__":
 
     print(" Execution time: %s seconds " % (time.time() - start_time))
     print('Uz:\n', Uz)
-    # plot_3D(ax, r1, r2, r3, 'tube1')
+    plot_3D(ax, r1, r2, r3, 'tube1')
 
-    # ax.legend()
-    # # plt.show()
+    ax.legend()
+    plt.show()
 
     # # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
     # q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs
