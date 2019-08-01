@@ -21,7 +21,6 @@ from CTR_model import CTRobotModel, plot_3D
 from TrajectoryGenerator import TrajectoryGenerator, TrajectoryRetreiver, TrajectoryRetreiverLin
 from CurvatureController import UzController
 from trajTest import HelicalGenerator
-from functools import partial
 
 
 class Jacobian(object):
@@ -35,17 +34,11 @@ class Jacobian(object):
         self.J = np.zeros([len(self.x), len(self.q)], dtype=np.float)
         self.damped_lsq = damped_lsq
 
-    def dxdq(self, qq):
-        # return xx.transpose() * qq
-        (r1,r2,r3,Uz) = self.model(qq, self.uz_0)
-        xx = np.array(r1[-1])                           # TODO: check!
-        return xx
-
     def f(self, qq):
-        return np.array([self.dxdq(qq)], dtype = np.float)
+        (r1,r2,r3,Uz) = self.model(qq, self.uz_0)
+        return np.array([r1[-1]], dtype = np.float)
 
     def parallel_finite_diff(self, i):
-
         q_iplus = self.q.copy()
         q_iminus = self.q.copy()
         q_iplus[i] += self.delta_q[i] / 2
@@ -57,7 +50,6 @@ class Jacobian(object):
         return (f_plus - f_minus) / self.delta_q[i]
 
     def jac_approx(self):
-
         for i in np.arange(len(self.q)):
             q_iplus = self.q.copy()
             q_iminus = self.q.copy()
@@ -78,11 +70,60 @@ class Jacobian(object):
         return jac_inv
 
 
+class CombinedJacobian(object):
+
+    def __init__(self, delta_Uz = [], delta_q = [], x = [], q = [], Uz = [], uz_0 = [], model=0, damped_lsq=0):
+        self.delta_q = delta_q
+        self.delta_Uz = delta_Uz
+        self.x = x
+        self.q = q
+        self.model = model
+        self.Uz = Uz
+        self.uz_0 = uz_0
+        self.J_uz = np.zeros((len(self.Uz), len(self.Uz)), dtype=np.float)
+        self.J_x = np.zeros([len(self.x), len(self.q)], dtype=np.float)
+        self.damped_lsq = damped_lsq
+
+    def f(self, uz):
+        (r1,r2,r3,Uz) = self.model(self.q, uz)
+        return (np.array([r1[-1]], dtype = np.float), np.array(Uz, dtype = np.float))
+
+    def parallel_finite_diff(self, i):
+        uz_iplus = self.Uz.copy()
+        uz_iminus = self.Uz.copy()
+
+        uz_iplus[i] += self.delta_Uz[i] / 2
+        uz_iminus[i] -= self.delta_Uz[i] / 2
+
+        f_plus = self.f(uz_iplus)
+        f_minus = self.f(uz_iminus)
+
+        return np.array((f_plus - f_minus) / self.delta_Uz[i]).flatten()
+
+    def jac_approx(self):
+        for i in np.arange(len(self.Uz)):
+            uz_iplus = self.Uz.copy()
+            uz_iminus = self.Uz.copy()
+
+            uz_iplus[i] += self.delta_Uz[i] / 2
+            uz_iminus[i] -= self.delta_Uz[i] / 2
+
+            f_plus = self.f(uz_iplus)
+            f_minus = self.f(uz_iminus)
+
+            self.J[:, i] = np.array((f_plus - f_minus) / self.delta_Uz[i]).flatten()
+
+    def p_inv(self):
+        self.jac_approx()
+        jac_inv = np.linalg.pinv(self.J)  # inv(X^T * X) * X^T
+        return jac_inv
+
+
 class Controller(object):
 
     def __init__(self, Kp_x=5, Ki_x=0, Kd_x=0, total_time=1, dt=0.05, sim=False,
             model=lambda q,uz:moving_CTR(q,uz), plot=False, vanilla_model=None,
-            jac_del_q=1e-1, damped_lsq=0, pertubed_model=None, parallel=False, helical=None):
+            jac_del_q=1e-1, damped_lsq=0, pertubed_model=None, parallel=False):
 
         self.model = model
         self.vanilla_model = vanilla_model
@@ -98,7 +139,6 @@ class Controller(object):
         self.sim = sim
         self.damped_lsq = damped_lsq
         self.parallel = parallel
-        self.helical = helical
         if pertubed_model:
             self.pertubed_model = pertubed_model
             print('Using Pertubed Model!')
@@ -133,27 +173,8 @@ class Controller(object):
         # delta_x = np.zeros(3)  # [r]
         integral = 0.0
 
-        if self.helical:
-            quintic = self.helical
-            # gettraj_pos = lambda aa, tt : quintic.calculate_position(aa, tt)
-            # gettraj_vel = lambda aa, tt : quintic.calculate_velocity(aa, tt)
-
-            # for aa in range(3):
-            #     func_pos = partial(gettraj_pos, aa)
-            #     pooltraj = Pool()
-            #     traj_results = pooltraj.map(func_pos, np.arange(0.0, self.total_time, self.dt))
-            #     x_des_pos[aa, :] = traj_results
-
-            # for aa in range(3):
-            #     func_pos = partial(gettraj_vel, aa)
-            #     pooltraj = Pool()
-            #     traj_results = pooltraj.map(func_pos, np.arange(0.0, self.total_time, self.dt))
-            #     x_des_vel[aa, :] = traj_results
-
-        else:
-            quintic = TrajectoryRetreiverLin()
-            # quintic = TrajectoryRetreiver()
-
+        quintic = TrajectoryRetreiverLin()
+        # quintic = TrajectoryRetreiver()
         q_des_pos[:, 0] = q_start
         x_des_pos[0, 0] = quintic.calculate_position(a1_c[0], t)
         x_des_pos[1, 0] = quintic.calculate_position(a2_c[0], t)
@@ -168,7 +189,6 @@ class Controller(object):
 
         while i < self.t_steps:
             x = np.zeros(3)  # just for size TODO: change to just integer
-            # if not self.helical:
             x_des_pos[0, i] = quintic.calculate_position(a1_c[0], t)
             x_des_pos[1, i] = quintic.calculate_position(a2_c[0], t)
             x_des_pos[2, i] = quintic.calculate_position(a3_c[0], t)
@@ -218,26 +238,26 @@ class Controller(object):
         
         print('------------------------------------------')
         print('Kp_x:', self.Kp_x)
-        mx = np.max(delta_x[0])
-        my = np.max(delta_x[1])
-        mz = np.max(delta_x[2])
-        print('Max x', mx)
-        print('Max y', my)
-        print('Max z', mz)
-        print('Final Error', delta_x[:, -1])
+        mx = np.argmax(np.abs(delta_x[0]))
+        my = np.argmax(np.abs(delta_x[1]))
+        mz = np.argmax(np.abs(delta_x[2]))
+        print('Max x error:', delta_x[0, mx])
+        print('Max y error:', delta_x[1, my])
+        print('Max z error:', delta_x[2, mz])
+        print('Final Error:', delta_x[:, -1])
         print("Full Run:", time.time()-runtime)
         self.result[str(self.Kp_x)] = max([mx, my, mz])
         print('------------------------------------------')
 
         if self.plot:
             # fig = plt.figure()
-            ax = plt.axes(projection='3d')
-            # colors = cm.rainbow(np.linspace(0, 1, len(x_cur_pos.transpose())))
-            # for y, c in zip(x_cur_pos.transpose(), colors):
-            #     # plt.scatter(x, y, color=c)
-            #     ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
-            ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=1, label='x_cur_pos', color='red')
-            ax.plot3D(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='x_des_traj', color='green')
+            # ax = plt.axes(projection='3d')
+            colors = cm.rainbow(np.linspace(0, 1, len(x_cur_pos.transpose())))
+            for y, c in zip(x_cur_pos.transpose(), colors):
+                # plt.scatter(x, y, color=c)
+                ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
+            # ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=1, label='x_cur_pos', color='red')
+            # ax.scatter(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='x_des_traj', marker='.')
             # if self.sim:
             #     ax.scatter(x_sim_pos[0], x_sim_pos[1], x_sim_pos[2], linewidth=1, label='x_sim_pos', marker='.', color='red')
 
@@ -260,7 +280,6 @@ class Controller(object):
             # Comment or uncomment following both lines to test the fake bounding box:
             for xb, yb, zb in zip(Xb, Yb, Zb):
                 ax.plot([xb], [yb], [zb], 'w')
-            # plt.savefig('traj.png')
 
             plt.subplots(1)
             tt = np.arange(0.0, self.total_time, self.dt)
@@ -272,7 +291,6 @@ class Controller(object):
             plt.plot(tt, q_des_pos[5], label='q_a3')
             plt.title('q inputs')
             plt.legend()
-            # plt.savefig('qin.png')
 
             plt.subplots(1)
             tt = np.arange(0.0, self.total_time, self.dt)
@@ -281,7 +299,6 @@ class Controller(object):
             plt.plot(tt, delta_x[2], label='z')
             plt.title('delta_x')
             plt.legend()
-            # plt.savefig('delx.png')
 
             plt.subplots(1)
             tt = np.arange(0.0, self.total_time, self.dt)
@@ -293,20 +310,18 @@ class Controller(object):
             plt.plot(tt, delta_q[5], label='del_q.a3')
             plt.title('delta_q')
             plt.legend()
-            # plt.savefig('delq.png')
             
             plt.subplots(1)
-            plt.scatter(tt, x_des_vel[0, :], label='x')
-            plt.scatter(tt, x_des_vel[1, :], label='y')
-            plt.scatter(tt, x_des_vel[2, :], label='z')
+            plt.plot(tt, x_des_vel[0, :], label='x')
+            plt.plot(tt, x_des_vel[1, :], label='y')
+            plt.plot(tt, x_des_vel[2, :], label='z')
             plt.title('x_des_vel trajectory')
             plt.legend()
-            # plt.savefig('xvel.png')
 
             plt.subplots(1)
-            plt.scatter(tt, x_des_pos[0, :], label='X trajectory', linestyle=':')
-            plt.scatter(tt, x_des_pos[1, :], label='Y trajectory', linestyle=':')
-            plt.scatter(tt, x_des_pos[2, :], label='Z trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[0, :], label='X trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[1, :], label='Y trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[2, :], label='Z trajectory', linestyle=':')
             plt.plot(tt, x_cur_pos[0, :], label='X traj. w/ Int. Controller', linestyle='--')
             plt.plot(tt, x_cur_pos[1, :], label='Y traj. w/ Int. Controller', linestyle='--')
             plt.plot(tt, x_cur_pos[2, :], label='Z traj. w/ Int. Controller', linestyle='--')
@@ -316,7 +331,6 @@ class Controller(object):
                 plt.plot(tt, x_sim_pos[2, :], label='sim.z')
             plt.title('x_des_pos/x_cur_pos trajectory')
             plt.legend()
-            # plt.savefig('xtraj.png')
 
             plt.show()
 
@@ -329,119 +343,111 @@ def uncertainty(value, error=0.05):
 if __name__ == "__main__":
 
 # MAIN
-    a_ans = (2*np.pi)/4
-    total_time = 1
-    dt = 0.0001
-    Uzdt = 0.1
-    UzControl = False
-    jac_del_q = 1e-3
-    Kp_x = 8
-    damped_lsq = 0.0
-    perturbed = False
-    parallel = True
-    Uz_parallel = False
-    helical = True
-    sim = False
-    print('Damped least square for Jacobian:', damped_lsq)
+    # a_ans = (2*np.pi)/4
+    # total_time = 1
+    # dt = 0.0001
+    # Uzdt = 0.1
+    # UzControl = True
+    # jac_del_q = 1e-3
+    # Kp_x = 10
+    # damped_lsq = 0.0
+    # perturbed = True
+    # parallel = True
+    # Uz_parallel = False
+    # helical = False
+    # sim = False
+    # print('Damped least square for Jacobian:', damped_lsq)
 
-    no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
-    initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
-    tubes_length = 1e-3 * np.array([431, 332, 174])              # length of tubes
-    curve_length = 1e-3 * np.array([103, 113, 134])              # length of the curved part of tubes
-
-
-    # physical parameters
-    E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
-    J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])                        # J second moment of inertia
-    I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])                        # I inertia
-    G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
-
-    Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
-    Uy = np.array([0, 0, 0])
-
-    ctr = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
+    # no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
+    # initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
+    # tubes_length = 1e-3 * np.array([431, 332, 174])              # length of tubes
+    # curve_length = 1e-3 * np.array([103, 113, 134])              # length of the curved part of tubes
 
 
-    # physical parameters  # PERTURBED
+    # # physical parameters
     # E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
-    # E = uncertainty(E)
-    E = np.array([6.11417514e+10, 4.99211494e+10, 4.48049374e+10])
-    J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])    # J second moment of inertia
-    I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])    # I inertia
+    # J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])                        # J second moment of inertia
+    # I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])                        # I inertia
     # G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
-    # G = uncertainty(G)
-    G = np.array([2.63458681e+10, 2.25407955e+10, 2.82994772e+10])
 
-    Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
-    Uy = np.array([0, 0, 0])
+    # Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
+    # Uy = np.array([0, 0, 0])
 
-    ctr_perturbed = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
+    # ctr = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
 
 
-    # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
-    ctr_model = lambda q,uz:ctr.moving_CTR(q,uz)
-    ctr_perturbed_model = lambda q,uz:ctr_perturbed.moving_CTR(q,uz)
+    # # physical parameters  # PERTURBED
+    # # E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
+    # # E = uncertainty(E)
+    # E = np.array([6.11417514e+10, 4.99211494e+10, 4.48049374e+10])
+    # J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])    # J second moment of inertia
+    # I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])    # I inertia
+    # # G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
+    # # G = uncertainty(G)
+    # G = np.array([2.63458681e+10, 2.25407955e+10, 2.82994772e+10])
 
-    if UzControl:
-        model = lambda q,uz:UzController(q,uz, dt=Uzdt, model=ctr_model, parallel=Uz_parallel).Uz_controlled_model()
-        print('Using Uz Controller!')
-    else:
-        model = ctr_model
-        print('NOT Using Uz Controller!')
+    # Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
+    # Uy = np.array([0, 0, 0])
 
-    if helical:
-        q_start = np.array([0.0101, 0.0101, 0.0101, 0, 0, 0])  # a_ans, a_ans, a_ans
-        q_end = np.array([0.0101, 0.0101, 0.0101, a_ans, a_ans, a_ans])  # ([1.0001, -1.0001, 0.7001, a_ans + 0.2, a_ans + 0.2, a_ans + 0.2])
-    else:
-        q_start = np.array([-0.0101, -0.0101, -0.0101, a_ans/2, a_ans/2, a_ans/2])  # a_ans, a_ans, a_ans
-        q_end = np.array([0.0101, 0.0101, 0.0101, a_ans, a_ans, a_ans])  # ([1.0001, -1.0001, 0.7001, a_ans + 0.2, a_ans + 0.2, a_ans + 0.2])
+    # ctr_perturbed = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
 
-    uz_0 = np.array([0.0, 0.0, 0.0])
-    (r1,r2,r3,Uz) = model(q_start, uz_0)
-    x_cur_pos = r1[-1]
-    (r1e,r2e,r3e,Uze) = model(q_end, uz_0)
-    x_end_pos = r1e[-1]
 
-    # q_start = np.array([-0.06235794, -0.00409771, 0.02960726, 0.14837708, 0.22618857, 0.09228618])
-    # q_end = np.array([-0.19746493, -0.00637689, 0.00991869, 0.17226557, 1.68673423, -0.22740581])
+    # # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
+    # ctr_model = lambda q,uz:ctr.moving_CTR(q,uz)
+    # ctr_perturbed_model = lambda q,uz:ctr_perturbed.moving_CTR(q,uz)
 
-    # x_cur_pos = [0.0, -0.07, 0.1]
-    # x_end_pos = [0.05, 0.05, 0.1]
-    # waypoints = [[0.0, 0.0, 0.0], [a_ans, a_ans, a_ans]]
-    waypoints = [x_cur_pos, x_end_pos]
-    a1_coeffs = []
-    a2_coeffs = []
-    a3_coeffs = []
+    # if UzControl:
+    #     model = lambda q,uz:UzController(q,uz, dt=Uzdt, model=ctr_model, parallel=Uz_parallel).Uz_controlled_model()
+    #     print('Using Uz Controller!')
+    # else:
+    #     model = ctr_model
+    #     print('NOT Using Uz Controller!')
 
-    if helical:
-        a1_coeffs = [0]*int(total_time/dt)
-        a2_coeffs = [1]*int(total_time/dt)
-        a3_coeffs = [2]*int(total_time/dt)
-        helical_traj = HelicalGenerator(x_cur_pos, [0.25, 0.25, 0.25])
-    else:
-        helical_traj = None
-        for x in range(len(waypoints)):
-            traj = TrajectoryGenerator(waypoints[x], waypoints[(x + 1) % len(waypoints)], total_time)
-            traj.solve_lin()
-            # traj.solve()
-            a1_coeffs.append(traj.x_c)
-            a2_coeffs.append(traj.y_c)
-            a3_coeffs.append(traj.z_c)
+    # q_start = np.array([-0.0101, -0.0101, -0.0101, a_ans/2, a_ans/2, a_ans/2])  # a_ans, a_ans, a_ans
+    # q_end = np.array([0.0101, 0.0101, 0.0101, a_ans, a_ans, a_ans])  # ([1.0001, -1.0001, 0.7001, a_ans + 0.2, a_ans + 0.2, a_ans + 0.2])
 
-    # for kpzzz in [10]:
-    # Kp_x = kpzzz
-    if perturbed:
-        CTR_sim = Controller(Kp_x=Kp_x, model=model, total_time=total_time, dt=dt, jac_del_q=jac_del_q, 
-                                plot=True, damped_lsq=damped_lsq, pertubed_model = ctr_perturbed_model,
-                                parallel=parallel, vanilla_model=ctr_model, sim=sim, helical=helical_traj)
-    else:
-        CTR_sim = Controller(Kp_x=Kp_x, model=model, total_time=total_time, dt=dt, jac_del_q=jac_del_q, 
-                                plot=True, damped_lsq=damped_lsq, parallel=parallel, 
-                                vanilla_model=ctr_model, sim=sim, helical=helical_traj)
-    CTR_sim.run(a1_coeffs, a2_coeffs, a3_coeffs, q_start, x_end_pos)
+    # # q_start = np.array([-0.06235794, -0.00409771, 0.02960726, 0.14837708, 0.22618857, 0.09228618])
+    # # q_end = np.array([-0.19746493, -0.00637689, 0.00991869, 0.17226557, 1.68673423, -0.22740581])
+    # uz_0 = np.array([0.0, 0.0, 0.0])
 
-    result = CTR_sim.result
-    print(max(result, key=lambda key: result[key]))
+    # (r1,r2,r3,Uz) = model(q_start, uz_0)
+    # x_cur_pos = r1[-1]
+    # (r1e,r2e,r3e,Uze) = model(q_end, uz_0)
+    # x_end_pos = r1e[-1]
+
+    # # x_cur_pos = [0.0, -0.07, 0.1]
+    # # x_end_pos = [0.05, 0.05, 0.1]
+    # # waypoints = [[0.0, 0.0, 0.0], [a_ans, a_ans, a_ans]]
+    # waypoints = [x_cur_pos, x_end_pos]
+    # a1_coeffs = []
+    # a2_coeffs = []
+    # a3_coeffs = []
+
+    # if helical:
+    #     hell = HelicalGenerator(1, 0.001)
+    # else:
+    #     for x in range(len(waypoints)):
+    #         traj = TrajectoryGenerator(waypoints[x], waypoints[(x + 1) % len(waypoints)], total_time)
+    #         traj.solve_lin()
+    #         # traj.solve()
+    #         a1_coeffs.append(traj.x_c)
+    #         a2_coeffs.append(traj.y_c)
+    #         a3_coeffs.append(traj.z_c)
+
+    # # for kpzzz in [10]:
+    # # Kp_x = kpzzz
+    # if perturbed:
+    #     CTR_sim = Controller(Kp_x=Kp_x, model=model, total_time=total_time, dt=dt, jac_del_q=jac_del_q, 
+    #                             plot=True, damped_lsq=damped_lsq, pertubed_model = ctr_perturbed_model,
+    #                             parallel=parallel, vanilla_model=ctr_model, sim=sim)
+    # else:
+    #     CTR_sim = Controller(Kp_x=Kp_x, model=model, total_time=total_time, dt=dt, jac_del_q=jac_del_q, 
+    #                             plot=True, damped_lsq=damped_lsq, parallel=parallel, 
+    #                             vanilla_model=ctr_model, sim=sim)
+    # CTR_sim.run(a1_coeffs, a2_coeffs, a3_coeffs, q_start, x_end_pos)
+
+    # result = CTR_sim.result
+    # print(max(result, key=lambda key: result[key]))
 
 
 # JACOBIAN TEST
@@ -491,3 +497,55 @@ if __name__ == "__main__":
     # print('\nparallel_jac_inv:\n', parallel_jac_inv)
     # print('\na * a+ * a == a   -> ', np.allclose(parallel_J, np.dot(parallel_J, np.dot(parallel_jac_inv, parallel_J))))
     # print('\na+ * a * a+ == a+ -> ', np.allclose(parallel_jac_inv, np.dot(parallel_jac_inv, np.dot(parallel_J, parallel_jac_inv))))
+
+
+# COMBINED JAC
+    # import CTRmodel
+    # model = lambda q, uz_0: CTRmodel.moving_CTR(q, uz_0)
+
+    # physical parameters
+    E = np.array([ 6.4359738368e+10, 5.2548578304e+10, 4.7163091968e+10])   # E stiffness
+    J = 1.0e-11 * np.array([0.0120, 0.0653, 0.1686])                        # J second moment of inertia
+    I = 1.0e-12 * np.array([0.0601, 0.3267, 0.8432])                        # I inertia
+    G = np.array([2.5091302912e+10, 2.1467424256e+10, 2.9788923392e+10] )   # G torsion constant
+
+    Ux = np.array([21.3, 13.108, 3.5])                  # constant U curvature vectors for each tubes
+    Uy = np.array([0, 0, 0])
+
+    no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
+    initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
+    tubes_length = 1e-3 * np.array([431, 332, 174])              # length of tubes
+    curve_length = 1e-3 * np.array([103, 113, 134])              # length of the curved part of tubes
+
+    ctr = CTRobotModel(no_of_tubes, tubes_length, curve_length, initial_q, E, J, I, G, Ux, Uy)
+    Uzdt = 0.1
+    Uz_parallel = False
+    ctr_model = lambda q,uz:ctr.moving_CTR(q,uz)
+
+    model = lambda q,uz:UzController(q,uz, dt=Uzdt, model=ctr_model, parallel=Uz_parallel).Uz_controlled_model()
+    print('Using Uz Controller!')
+
+    uz_0 = np.array([0.0, 0.0, 0.0])
+    q = np.array([0.0, 0.0, 0.0, 0.0, np.pi, np.pi])  # inputs q
+    delta_q = np.ones(6) * 1e-3
+    x = np.zeros(3)
+
+    runtime = time.time()
+    parallel_jac = Jacobian(delta_q, x, q, uz_0, model)
+    pickled_finite_diff = lambda i:parallel_jac.parallel_finite_diff(i)
+
+    pool = Pool()
+    results = pool.map(pickled_finite_diff, range(len(q)))
+
+    parallel_J = np.zeros([len(x), len(q)], dtype=np.float)
+    for i in np.arange(len(q)):
+        parallel_J[:, i] = results[i]
+
+    parallel_jac_inv = parallel_J.transpose() @ np.linalg.inv(parallel_J@parallel_J.transpose())
+
+    print('RunTime:', time.time()-runtime)
+    print('parallel_J:\n', parallel_J)
+    print('\nparallel_jac_inv:\n', parallel_jac_inv)
+    print('\na * a+ * a == a   -> ', np.allclose(parallel_J, np.dot(parallel_J, np.dot(parallel_jac_inv, parallel_J))))
+    print('\na+ * a * a+ == a+ -> ', np.allclose(parallel_jac_inv, np.dot(parallel_jac_inv, np.dot(parallel_J, parallel_jac_inv))))
+

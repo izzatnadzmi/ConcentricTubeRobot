@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     # initial value of twist
     uz_0 = np.array([0.0, 0.0, 0.0])  # .transpose()
-    q = np.array([.2, 0, 0, np.pi, np.pi, np.pi])  #inputs [BBBaaa]
+    q = np.array([.2, 0, 0, np.pi, np.pi, 0])  #inputs [BBBaaa]
 
     # no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
     initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]

@@ -217,14 +217,22 @@ if __name__ == "__main__":
     uz0_start = np.array([[0.0, 0.0, 0.0]]).transpose()
     ax = plt.axes(projection='3d')
 
+    runtime = time.time()
     (r1,r2,r3,Uz) = moving_CTR(q_static, uz0_start)
+    print("\nNormalRuntime:", time.time()-runtime)
+
     plot_3D(ax, r1, r2, r3, 'init position')
+    print('Uz before: ', Uz)
 
     # uz0_cont = UzController(q_static)
     # uz0_new = uz0_cont.run()
 
+    runtime = time.time()
     (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.1, parallel=True).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
+    print("\nUzRunTime:", time.time()-runtime)
+
     plot_3D(ax, r1, r2, r3, 'final position')
+    print('Uz after: ', Uz)
 
     # # Create cubic bounding box to simulate equal aspect ratio
     # max_range = 0.2  # np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
