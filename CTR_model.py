@@ -242,7 +242,7 @@ def plot_3D(ax, r1, r2, r3, label_str=''):
     ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)
     ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2)
     ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3)
-    ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
+    ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2])#, label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
 
     # Create cubic bounding box to simulate equal aspect ratio
     max_range = 0.2  # np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()

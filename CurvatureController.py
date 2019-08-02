@@ -128,13 +128,13 @@ class UzController(object):
 
         while i <= self.t_steps-1:
             # runtime = time.time()
-            Uz_traj_pos[0, i] = traj.calculate_position(a1_coeffs[0], t)    # FOR INTEGRAL
-            Uz_traj_pos[1, i] = traj.calculate_position(a2_coeffs[0], t)
-            Uz_traj_pos[2, i] = traj.calculate_position(a3_coeffs[0], t)
+            Uz_traj_pos[0, i] = traj.calculate_position(a1_coeffs[0], 0.9)    # FOR INTEGRAL
+            Uz_traj_pos[1, i] = traj.calculate_position(a2_coeffs[0], 0.9)
+            Uz_traj_pos[2, i] = traj.calculate_position(a3_coeffs[0], 0.9)
 
-            Uz_traj_vel[0, i] = traj.calculate_velocity(a1_coeffs[0], t)
-            Uz_traj_vel[1, i] = traj.calculate_velocity(a2_coeffs[0], t)
-            Uz_traj_vel[2, i] = traj.calculate_velocity(a3_coeffs[0], t)
+            Uz_traj_vel[0, i] = traj.calculate_velocity(a1_coeffs[0], 0.9)
+            Uz_traj_vel[1, i] = traj.calculate_velocity(a2_coeffs[0], 0.9)
+            Uz_traj_vel[2, i] = traj.calculate_velocity(a3_coeffs[0], 0.9)
 
             delta_Uz[:, i] = Uz_traj_pos[:, i] - Uz_end_cur_pos[:, i-1]
 
@@ -189,11 +189,11 @@ class UzController(object):
             # # plt.plot(tt, traj.calculate_position(a3_coeffs[0], tt))
             # # plt.title('uz0 pos trajectory')
 
-            # plt.subplots(1)
-            # plt.plot(tt, traj.calculate_velocity(a1_coeffs[0], tt))
-            # plt.plot(tt, traj.calculate_velocity(a2_coeffs[0], tt))
-            # plt.plot(tt, traj.calculate_velocity(a3_coeffs[0], tt))
-            # plt.title('uz0 vel trajectory')
+            plt.subplots(1)
+            plt.plot(tt, Uz_traj_vel[0])
+            plt.plot(tt, Uz_traj_vel[0])
+            plt.plot(tt, Uz_traj_vel[0])
+            plt.title('uz0 vel trajectory')
 
         return uz0_cur_pos[:, -1]
 
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     # uz0_new = uz0_cont.run()
 
     runtime = time.time()
-    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.1, parallel=True).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
+    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.2, parallel=True).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
     print("\nUzRunTime:", time.time()-runtime)
 
     plot_3D(ax, r1, r2, r3, 'final position')

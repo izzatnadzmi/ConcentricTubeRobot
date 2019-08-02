@@ -128,8 +128,9 @@ if __name__ == "__main__":
     ctr_model = lambda q,uz:ctr.moving_CTR(q,uz)
     model = lambda q,uz:UzController(q,uz, dt=Uzdt, model=ctr_model).Uz_controlled_model()
 
+    a_ans = (2*np.pi)/4
     start_pos = [0, 0, 0.05]
-    q_start = np.array([0.0101, 0.0101, 0.0101, 0, 0, 0])  # a_ans, a_ans, a_ans
+    q_start = np.array([0.0101, 0.0101, 0.0101, -a_ans, -a_ans, -a_ans])  # a_ans, a_ans, a_ans
     uz_0 = np.array([0.0, 0.0, 0.0])
     (r1,r2,r3,Uz) = model(q_start, uz_0)
     start_pos = r1[-1]

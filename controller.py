@@ -203,7 +203,8 @@ class Controller(object):
             # print('delta_q', delta_q)
             q_des_pos[:, i] = q_des_pos[:, i-1] + delta_q[:, i] * self.dt
             (r1,r2,r3,Uz) = self.pertubed_model(q_des_pos[:, i], uz_0)        # FORWARD KINEMATICS
-            # plot_3D(ax, r1, r2, r3)
+            if i%2000 == 0:
+                plot_3D(ax, r1, r2, r3)
             x_cur_pos[:, i] = r1[-1]
 
             if self.sim:
@@ -231,13 +232,13 @@ class Controller(object):
 
         if self.plot:
             # fig = plt.figure()
-            ax = plt.axes(projection='3d')
+            # ax = plt.axes(projection='3d')
             # colors = cm.rainbow(np.linspace(0, 1, len(x_cur_pos.transpose())))
             # for y, c in zip(x_cur_pos.transpose(), colors):
             #     # plt.scatter(x, y, color=c)
             #     ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
-            ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=1, label='x_cur_pos', color='red')
-            ax.plot3D(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='x_des_traj', color='green')
+            ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=2, label='x_cur_pos', color='red')
+            ax.plot3D(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='x_des_traj', color='green', linestyle='--')
             # if self.sim:
             #     ax.scatter(x_sim_pos[0], x_sim_pos[1], x_sim_pos[2], linewidth=1, label='x_sim_pos', marker='.', color='red')
 
@@ -246,9 +247,9 @@ class Controller(object):
             # (r1,r2,r3,Uz) = self.model(q_des_pos[:, -1], uz_0)
             # plot_3D(ax, r1, r2, r3, 'final pos - q w/ controller')
             ax.legend()
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_zlabel('z ')
+            ax.set_xlabel('X (m)')
+            ax.set_ylabel('Y (m)')
+            ax.set_zlabel('Z (m)')
             # plt.axis('equal')
             # ax.set_aspect('equal')
 
@@ -296,17 +297,17 @@ class Controller(object):
             # plt.savefig('delq.png')
             
             plt.subplots(1)
-            plt.scatter(tt, x_des_vel[0, :], label='x')
-            plt.scatter(tt, x_des_vel[1, :], label='y')
-            plt.scatter(tt, x_des_vel[2, :], label='z')
+            plt.plot(tt, x_des_vel[0, :], label='x')
+            plt.plot(tt, x_des_vel[1, :], label='y')
+            plt.plot(tt, x_des_vel[2, :], label='z')
             plt.title('x_des_vel trajectory')
             plt.legend()
             # plt.savefig('xvel.png')
 
             plt.subplots(1)
-            plt.scatter(tt, x_des_pos[0, :], label='X trajectory', linestyle=':')
-            plt.scatter(tt, x_des_pos[1, :], label='Y trajectory', linestyle=':')
-            plt.scatter(tt, x_des_pos[2, :], label='Z trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[0, :], label='X trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[1, :], label='Y trajectory', linestyle=':')
+            plt.plot(tt, x_des_pos[2, :], label='Z trajectory', linestyle=':')
             plt.plot(tt, x_cur_pos[0, :], label='X traj. w/ Int. Controller', linestyle='--')
             plt.plot(tt, x_cur_pos[1, :], label='Y traj. w/ Int. Controller', linestyle='--')
             plt.plot(tt, x_cur_pos[2, :], label='Z traj. w/ Int. Controller', linestyle='--')
@@ -335,7 +336,7 @@ if __name__ == "__main__":
     Uzdt = 0.1
     UzControl = False
     jac_del_q = 1e-3
-    Kp_x = 8
+    Kp_x = 110
     damped_lsq = 0.0
     perturbed = False
     parallel = True
@@ -390,7 +391,7 @@ if __name__ == "__main__":
         print('NOT Using Uz Controller!')
 
     if helical:
-        q_start = np.array([0.0101, 0.0101, 0.0101, 0, 0, 0])  # a_ans, a_ans, a_ans
+        q_start = np.array([0.0101, 0.0101, 0.0101, -a_ans, -a_ans, -a_ans])  # a_ans, a_ans, a_ans
         q_end = np.array([0.0101, 0.0101, 0.0101, a_ans, a_ans, a_ans])  # ([1.0001, -1.0001, 0.7001, a_ans + 0.2, a_ans + 0.2, a_ans + 0.2])
     else:
         q_start = np.array([-0.0101, -0.0101, -0.0101, a_ans/2, a_ans/2, a_ans/2])  # a_ans, a_ans, a_ans
@@ -417,7 +418,7 @@ if __name__ == "__main__":
         a1_coeffs = [0]*int(total_time/dt)
         a2_coeffs = [1]*int(total_time/dt)
         a3_coeffs = [2]*int(total_time/dt)
-        helical_traj = HelicalGenerator(x_cur_pos, [0.25, 0.25, 0.25])
+        helical_traj = HelicalGenerator(x_cur_pos, [-0.25, -0.25, 0.25])
     else:
         helical_traj = None
         for x in range(len(waypoints)):
