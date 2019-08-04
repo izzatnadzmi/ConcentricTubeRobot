@@ -211,7 +211,7 @@ class Controller(object):
                 (r1,r2,r3,Uz) = self.vanilla_model(q_des_pos[:, i], uz_0)
                 x_sim_pos[:, i] = r1[-1]
 
-            print('TimeStep:', t, 'RunTime:', time.time()-runtime)
+            print('TimeStep:', t)#, 'RunTime:', time.time()-runtime)
             # print('i:', i, 'tsteps:', self.t_steps)
             t += self.dt
             i += 1
@@ -219,13 +219,16 @@ class Controller(object):
         
         print('------------------------------------------')
         print('Kp_x:', self.Kp_x)
-        mx = np.max(delta_x[0])
-        my = np.max(delta_x[1])
-        mz = np.max(delta_x[2])
-        print('Max x', mx)
-        print('Max y', my)
-        print('Max z', mz)
+        mx = np.argmax(delta_x[0])
+        my = np.argmax(delta_x[1])
+        mz = np.argmax(delta_x[2])
+        print('Max x', delta_x[:, mx])
+        print('Max y', delta_x[:, my])
+        print('Max z', delta_x[:, mz])
         print('Final Error', delta_x[:, -1])
+        print('Mean X Error', delta_x[0])
+        print('Mean Y Error', delta_x[1])
+        print('Mean Z Error', delta_x[2])
         print("Full Run:", time.time()-runtime)
         self.result[str(self.Kp_x)] = max([mx, my, mz])
         print('------------------------------------------')
@@ -237,10 +240,10 @@ class Controller(object):
             # for y, c in zip(x_cur_pos.transpose(), colors):
             #     # plt.scatter(x, y, color=c)
             #     ax.scatter(y[0], y[1], y[2], linewidth=1, color=c)
-            ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=2, label='x_cur_pos', color='red')
-            ax.plot3D(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='x_des_traj', color='green', linestyle='--')
-            # if self.sim:
-            #     ax.scatter(x_sim_pos[0], x_sim_pos[1], x_sim_pos[2], linewidth=1, label='x_sim_pos', marker='.', color='red')
+            ax.plot3D(x_cur_pos[0], x_cur_pos[1], x_cur_pos[2], linewidth=2, label='Actual Trajectory', color='red')
+            ax.plot3D(x_des_pos[0], x_des_pos[1], x_des_pos[2], linewidth=1, label='Desired Trajectory', color='green', linestyle='--')
+            if self.sim:
+                ax.plot3D(x_sim_pos[0], x_sim_pos[1], x_sim_pos[2], linewidth=1, label='Traj. w/o Uz Controller', linestyle=':', color='black')
 
             # (r1,r2,r3,Uz) = self.model(q_des_pos[:, 0], uz_0)
             # plot_3D(ax, r1, r2, r3, 'initial pos')
@@ -332,17 +335,17 @@ if __name__ == "__main__":
 # MAIN
     a_ans = (2*np.pi)/4
     total_time = 1
-    dt = 0.0001
+    dt = 0.01
     Uzdt = 0.1
-    UzControl = False
+    UzControl = True
     jac_del_q = 1e-3
-    Kp_x = 110
+    Kp_x = 10
     damped_lsq = 0.0
     perturbed = False
     parallel = True
     Uz_parallel = False
     helical = True
-    sim = False
+    sim = True
     print('Damped least square for Jacobian:', damped_lsq)
 
     no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
