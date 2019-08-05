@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import time
 sys.path.append("../")
+sys.path.append("./test")
 sys.path.append("./ConcentricTubeRobot/")
 sys.path.append("./ConcentricTubeRobot/test")
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -219,16 +220,16 @@ class Controller(object):
         
         print('------------------------------------------')
         print('Kp_x:', self.Kp_x)
-        mx = np.argmax(delta_x[0])
-        my = np.argmax(delta_x[1])
-        mz = np.argmax(delta_x[2])
+        mx = np.argmax(np.abs(delta_x[0]))
+        my = np.argmax(np.abs(delta_x[1]))
+        mz = np.argmax(np.abs(delta_x[2]))
         print('Max x', delta_x[:, mx])
         print('Max y', delta_x[:, my])
         print('Max z', delta_x[:, mz])
         print('Final Error', delta_x[:, -1])
-        print('Mean X Error', delta_x[0])
-        print('Mean Y Error', delta_x[1])
-        print('Mean Z Error', delta_x[2])
+        print('Mean X Error', np.mean(delta_x[0]))
+        print('Mean Y Error', np.mean(delta_x[1]))
+        print('Mean Z Error', np.mean(delta_x[2]))
         print("Full Run:", time.time()-runtime)
         self.result[str(self.Kp_x)] = max([mx, my, mz])
         print('------------------------------------------')

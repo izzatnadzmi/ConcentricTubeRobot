@@ -27,25 +27,25 @@ class UzJacobian(object):
         self.Uz = Uz
         self.J = np.zeros((len(self.Uz), len(self.Uz)), dtype=np.float)
 
-    def dxdq(self, uz):
+    def dxdq(self, uz0):
         # return xx.transpose() * qq
-        (r1,r2,r3,Uz) = self.model(self.q, uz)
+        (r1,r2,r3,Uz) = self.model(self.q, uz0)
         # xx = np.array(r1[-1])                               # TODO: check!
         return Uz
 
-    def f(self, uz):
-        return np.array(self.dxdq(uz), dtype = np.float)
+    def f(self, uz0):
+        return np.array(self.dxdq(uz0), dtype = np.float)
 
     def parallel_finite_diff(self, i):
 
-        uz_iplus = self.Uz.copy()
-        uz_iminus = self.Uz.copy()
+        uz0_iplus = self.Uz.copy()
+        uz0_iminus = self.Uz.copy()
 
-        uz_iplus[i] += self.delta_Uz[i] / 2
-        uz_iminus[i] -= self.delta_Uz[i] / 2
+        uz0_iplus[i] += self.delta_Uz[i] / 2
+        uz0_iminus[i] -= self.delta_Uz[i] / 2
 
-        f_plus = self.f(uz_iplus)
-        f_minus = self.f(uz_iminus)
+        f_plus = self.f(uz0_iplus)
+        f_minus = self.f(uz0_iminus)
 
         return np.array((f_plus - f_minus) / self.delta_Uz[i]).flatten()
 
@@ -136,7 +136,8 @@ class UzController(object):
             Uz_traj_vel[1, i] = traj.calculate_velocity(a2_coeffs[0], 0.9)
             Uz_traj_vel[2, i] = traj.calculate_velocity(a3_coeffs[0], 0.9)
 
-            delta_Uz[:, i] = Uz_traj_pos[:, i] - Uz_end_cur_pos[:, i-1]
+            # delta_Uz[:, i] = Uz_traj_pos[:, i] - Uz_end_cur_pos[:, i-1]
+            delta_Uz[:, i] = np.array([0,0,0]) - Uz_end_cur_pos[:, i-1]
 
             # get trajectory from Jacobian
             r_jac = UzJacobian(self.jac_delta_uz, self.x_dim, self.q, uz0_cur_pos[:, i-1], self.model)
@@ -228,7 +229,7 @@ if __name__ == "__main__":
     # uz0_new = uz0_cont.run()
 
     runtime = time.time()
-    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.2, parallel=True).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
+    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.2, parallel=True, jac_delta_uz=0.0001, Kp_Uz=3).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
     print("\nUzRunTime:", time.time()-runtime)
 
     plot_3D(ax, r1, r2, r3, 'final position')
