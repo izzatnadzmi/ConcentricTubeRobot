@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class HelicalGenerator():
     def __init__(self, start_pos, des_pos, # total_time, dt, z_max=0.01, 
-                    start_vel=[0,0,0], des_vel=[0,0,0]):
+                    start_vel=[0,0,0], des_vel=[0,0,0], m=1):
         # self.theta = 0
         self.x = 0
         self.y = 0
@@ -34,7 +34,7 @@ class HelicalGenerator():
         self.d = np.sqrt((self.x1 - self.x2)**2 + (self.y1 - self.y2)**2)
         self.t0 = np.tan((self.y2 - self.y1)/(self.x1 - self.x2))
         self.rev = 1
-        self.m = 1
+        self.m = m
 
     def helical_traj(self, t):
         # self.theta = t
@@ -128,17 +128,20 @@ if __name__ == "__main__":
     ctr_model = lambda q,uz:ctr.moving_CTR(q,uz)
     model = lambda q,uz:UzController(q,uz, dt=Uzdt, model=ctr_model).Uz_controlled_model()
 
+    ax = plt.axes(projection='3d')
     a_ans = (2*np.pi)/4
     start_pos = [0, 0, 0.05]
     q_start = np.array([0.0101, 0.0101, 0.0101, -a_ans, -a_ans, -a_ans])  # a_ans, a_ans, a_ans
     uz_0 = np.array([0.0, 0.0, 0.0])
     (r1,r2,r3,Uz) = model(q_start, uz_0)
+    # plot_3D(ax, r1, r2, r3)
     start_pos = r1[-1]
+    print(start_pos)
 
 
-    des_pos = [-0.25, -0.25, 0.25]
-    hell = HelicalGenerator(start_pos, des_pos)
-    ax = plt.axes(projection='3d')
+    des_pos = [0.145, -0.145, 0.145]
+    hell = HelicalGenerator(start_pos, des_pos, m=0.3)
+    # ax = plt.axes(projection='3d')
     for xx in np.linspace(0,1,100):
         hell.helical_traj(xx)
         x_2.append(hell.x)

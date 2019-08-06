@@ -260,6 +260,28 @@ class CombinedJacobian(object):
         return jac_inv
 
 
+class Parallelisor(object):
+    def __init__(self, jac_del_q, x, q, uz_0, model):
+        self.jac_del_q = jac_del_q
+        self.x = x
+        self.q = q
+        self.uz_0 = uz_0
+        self.model = model
+
+    def combined_jac(self):                       #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO #TODO
+        r_jac = CombinedJacobian(self.jac_del_q, self.x, self.q, self.uz_0, self.model)
+        
+        pickled_finite_diff = lambda i:r_jac.parallel_finite_diff(i)
+        pool = Pool()
+
+        results = pool.map(pickled_finite_diff, range(len(self.q)))
+        parallel_J = np.zeros([len(self.x), len(self.q)], dtype=np.float)
+        for x in np.arange(len(self.q)):
+            parallel_J[:, x] = results[x]
+        # J_inv = parallel_J.transpose() @ np.linalg.inv(parallel_J@parallel_J.transpose())
+        return parallel_J
+
+
 class CombinedController(object):
     def __init__(self, Kp_x=5, Ki_x=0, Kd_x=0, total_time=1, dt=0.05, sim=False,
             model=lambda q,uz:moving_CTR(q,uz), plot=False, vanilla_model=None,
@@ -291,11 +313,11 @@ class CombinedController(object):
         return (q_des, r_jac.p_inv())
 
     # def multiprocess(self, traj, x_des, q_des):
-    #     pool = mp.Pool()
-    #     results = [pool.apply_async(self.get_jinv, args=(x_des, q_des)) for td in traj]
-    #     results = [p.get() for p in results]
-    #     results.sort() # to sort the results by input window width
-    #     return results
+        # pool = mp.Pool()
+        # results = [pool.apply_async(self.get_jinv, args=(x_des, q_des)) for td in traj]
+        # results = [p.get() for p in results]
+        # results.sort() # to sort the results by input window width
+        # return results
 
     def run(self, a1_c, a2_c, a3_c, q_start, x_end_pos):
         runtime = time.time()
@@ -650,15 +672,17 @@ if __name__ == "__main__":
     # print('\na+ * a * a+ == a+ -> ', np.allclose(damped_pinv, np.dot(damped_pinv, np.dot(J, damped_pinv))))
 
     runtime = time.time()
-    parallel_jac = CombinedJacobian(delta_q, x, q, uz_0, model)
-    pickled_finite_diff = lambda i:parallel_jac.parallel_finite_diff(i)
+    parallel_jac = Parallelisor(delta_q, x, q, uz_0, model)
+    # pickled_finite_diff = lambda i:parallel_jac.parallel_finite_diff(i)
 
-    pool = Pool()
-    results = pool.map(pickled_finite_diff, range(len(q)))
+    # pool = Pool()
+    # results = pool.map(pickled_finite_diff, range(len(q)))
 
-    parallel_J = np.zeros([len(x), len(q)], dtype=np.float)
-    for i in np.arange(len(q)):
-        parallel_J[:, i] = results[i]
+    # parallel_J = np.zeros([len(x), len(q)], dtype=np.float)
+    # for i in np.arange(len(q)):
+    #     parallel_J[:, i] = results[i]
+    
+    parallel_J = parallel_jac.combined_jac()
 
     parallel_jac_inv = parallel_J.transpose() @ np.linalg.inv(parallel_J@parallel_J.transpose())
 

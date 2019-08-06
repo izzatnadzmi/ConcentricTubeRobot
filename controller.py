@@ -275,7 +275,9 @@ class Controller(object):
             plt.plot(tt, q_des_pos[3], label='q_a1')
             plt.plot(tt, q_des_pos[4], label='q_a2')
             plt.plot(tt, q_des_pos[5], label='q_a3')
-            plt.title('q inputs')
+            # plt.title('q inputs')
+            ax.set_xlabel('Timeline')
+            ax.set_ylabel('q inputs')
             plt.legend()
             # plt.savefig('qin.png')
 
@@ -284,7 +286,9 @@ class Controller(object):
             plt.plot(tt, delta_x[0], label='x')
             plt.plot(tt, delta_x[1], label='y')
             plt.plot(tt, delta_x[2], label='z')
-            plt.title('delta_x')
+            # plt.title('delta_x')
+            ax.set_xlabel('Timeline')
+            ax.set_ylabel('Error (m)')
             plt.legend()
             # plt.savefig('delx.png')
 
@@ -296,7 +300,9 @@ class Controller(object):
             plt.plot(tt, delta_q[3], label='del_q.a1')
             plt.plot(tt, delta_q[4], label='del_q.a2')
             plt.plot(tt, delta_q[5], label='del_q.a3')
-            plt.title('delta_q')
+            # plt.title('delta_q')
+            ax.set_xlabel('Timeline')
+            ax.set_ylabel('q input delta')
             plt.legend()
             # plt.savefig('delq.png')
             
@@ -304,7 +310,9 @@ class Controller(object):
             plt.plot(tt, x_des_vel[0, :], label='x')
             plt.plot(tt, x_des_vel[1, :], label='y')
             plt.plot(tt, x_des_vel[2, :], label='z')
-            plt.title('x_des_vel trajectory')
+            # plt.title('x_des_vel trajectory')
+            ax.set_xlabel('Timeline')
+            ax.set_ylabel('Unit Velocity')
             plt.legend()
             # plt.savefig('xvel.png')
 
@@ -312,14 +320,16 @@ class Controller(object):
             plt.plot(tt, x_des_pos[0, :], label='X trajectory', linestyle=':')
             plt.plot(tt, x_des_pos[1, :], label='Y trajectory', linestyle=':')
             plt.plot(tt, x_des_pos[2, :], label='Z trajectory', linestyle=':')
-            plt.plot(tt, x_cur_pos[0, :], label='X traj. w/ Int. Controller', linestyle='--')
-            plt.plot(tt, x_cur_pos[1, :], label='Y traj. w/ Int. Controller', linestyle='--')
-            plt.plot(tt, x_cur_pos[2, :], label='Z traj. w/ Int. Controller', linestyle='--')
+            plt.plot(tt, x_cur_pos[0, :], label='X traj. w/ Uz Controller', linestyle='--')
+            plt.plot(tt, x_cur_pos[1, :], label='Y traj. w/ Uz Controller', linestyle='--')
+            plt.plot(tt, x_cur_pos[2, :], label='Z traj. w/ Uz Controller', linestyle='--')
             if self.sim:
-                plt.plot(tt, x_sim_pos[0, :], label='sim.x')
-                plt.plot(tt, x_sim_pos[1, :], label='sim.y')
-                plt.plot(tt, x_sim_pos[2, :], label='sim.z')
-            plt.title('x_des_pos/x_cur_pos trajectory')
+                plt.plot(tt, x_sim_pos[0, :], label='X traj. w/o Uz Controller')
+                plt.plot(tt, x_sim_pos[1, :], label='Y traj. w/o Uz Controller')
+                plt.plot(tt, x_sim_pos[2, :], label='Z traj. w/o Uz Controller')
+            # plt.title('x_des_pos/x_cur_pos trajectory')
+            ax.set_xlabel('Timeline')
+            ax.set_ylabel('Euclidean distance (m)')
             plt.legend()
             # plt.savefig('xtraj.png')
 
@@ -336,11 +346,11 @@ if __name__ == "__main__":
 # MAIN
     a_ans = (2*np.pi)/4
     total_time = 1
-    dt = 0.01
+    dt = 0.0001
     Uzdt = 0.1
     UzControl = True
     jac_del_q = 1e-3
-    Kp_x = 10
+    Kp_x = 110
     damped_lsq = 0.0
     perturbed = False
     parallel = True
