@@ -204,8 +204,8 @@ class Controller(object):
             # print('delta_q', delta_q)
             q_des_pos[:, i] = q_des_pos[:, i-1] + delta_q[:, i] * self.dt
             (r1,r2,r3,Uz) = self.pertubed_model(q_des_pos[:, i], uz_0)        # FORWARD KINEMATICS
-            if i%2000 == 0:
-                plot_3D(ax, r1, r2, r3)
+            # if i%2000 == 0:
+            #     plot_3D(ax, r1, r2, r3)
             x_cur_pos[:, i] = r1[-1]
 
             if self.sim:
@@ -276,8 +276,8 @@ class Controller(object):
             plt.plot(tt, q_des_pos[4], label='q_a2')
             plt.plot(tt, q_des_pos[5], label='q_a3')
             # plt.title('q inputs')
-            ax.set_xlabel('Timeline')
-            ax.set_ylabel('q inputs')
+            plt.set_xlabel('Timeline')
+            plt.set_ylabel('q inputs')
             plt.legend()
             # plt.savefig('qin.png')
 
@@ -287,8 +287,8 @@ class Controller(object):
             plt.plot(tt, delta_x[1], label='y')
             plt.plot(tt, delta_x[2], label='z')
             # plt.title('delta_x')
-            ax.set_xlabel('Timeline')
-            ax.set_ylabel('Error (m)')
+            plt.set_xlabel('Timeline')
+            plt.set_ylabel('Error (m)')
             plt.legend()
             # plt.savefig('delx.png')
 
@@ -301,8 +301,8 @@ class Controller(object):
             plt.plot(tt, delta_q[4], label='del_q.a2')
             plt.plot(tt, delta_q[5], label='del_q.a3')
             # plt.title('delta_q')
-            ax.set_xlabel('Timeline')
-            ax.set_ylabel('q input delta')
+            plt.set_xlabel('Timeline')
+            plt.set_ylabel('q input delta')
             plt.legend()
             # plt.savefig('delq.png')
             
@@ -311,8 +311,8 @@ class Controller(object):
             plt.plot(tt, x_des_vel[1, :], label='y')
             plt.plot(tt, x_des_vel[2, :], label='z')
             # plt.title('x_des_vel trajectory')
-            ax.set_xlabel('Timeline')
-            ax.set_ylabel('Unit Velocity')
+            plt.set_xlabel('Timeline')
+            plt.set_ylabel('Unit Velocity')
             plt.legend()
             # plt.savefig('xvel.png')
 
@@ -328,8 +328,8 @@ class Controller(object):
                 plt.plot(tt, x_sim_pos[1, :], label='Y traj. w/o Uz Controller')
                 plt.plot(tt, x_sim_pos[2, :], label='Z traj. w/o Uz Controller')
             # plt.title('x_des_pos/x_cur_pos trajectory')
-            ax.set_xlabel('Timeline')
-            ax.set_ylabel('Euclidean distance (m)')
+            plt.set_xlabel('Timeline')
+            plt.set_ylabel('Euclidean distance (m)')
             plt.legend()
             # plt.savefig('xtraj.png')
 
@@ -346,7 +346,7 @@ if __name__ == "__main__":
 # MAIN
     a_ans = (2*np.pi)/4
     total_time = 1
-    dt = 0.0001
+    dt = 0.001
     Uzdt = 0.1
     UzControl = True
     jac_del_q = 1e-3
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     perturbed = False
     parallel = True
     Uz_parallel = False
-    helical = True
+    helical = False
     sim = True
     print('Damped least square for Jacobian:', damped_lsq)
 
@@ -432,7 +432,7 @@ if __name__ == "__main__":
         a1_coeffs = [0]*int(total_time/dt)
         a2_coeffs = [1]*int(total_time/dt)
         a3_coeffs = [2]*int(total_time/dt)
-        helical_traj = HelicalGenerator(x_cur_pos, [-0.25, -0.25, 0.25])
+        helical_traj = HelicalGenerator(x_cur_pos, [0.145, -0.145, 0.145], m=0.3)  # -0.25, -0.25, 0.25
     else:
         helical_traj = None
         for x in range(len(waypoints)):

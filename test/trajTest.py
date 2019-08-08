@@ -57,10 +57,10 @@ class HelicalGenerator():
 
     def calculate_velocity(self, c, t):
         if c == 0:
-            return (2 * t*self.d * -np.sin(2*np.pi*self.rev*t+self.t0)*(2*np.pi*self.rev)) + \
+            return (self.m * t*self.d * -np.sin(2*np.pi*self.rev*t+self.t0)*(2*np.pi*self.rev)) + \
                         (np.cos(2*np.pi*self.rev*t+self.t0) * self.m * self.d)
         if c == 1:
-            return (2 * t*self.d * np.cos(2*np.pi*self.rev*t+self.t0)*(2*np.pi*self.rev)) + \
+            return (self.m * t*self.d * np.cos(2*np.pi*self.rev*t+self.t0)*(2*np.pi*self.rev)) + \
                         (np.sin(2*np.pi*self.rev*t+self.t0) * self.m * self.d)
         if c == 2:
             return self.z2 - self.z1

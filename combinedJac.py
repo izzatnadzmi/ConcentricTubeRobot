@@ -34,14 +34,9 @@ class UzJacobian(object):
         self.Uz = Uz
         self.J = np.zeros((len(self.Uz), len(self.Uz)), dtype=np.float)
 
-    def dxdq(self, uz0):
-        # return xx.transpose() * qq
-        (r1,r2,r3,Uz) = self.model(self.q, uz0)
-        # xx = np.array(r1[-1])                               # TODO: check!
-        return Uz
-
     def f(self, uz0):
-        return np.array(self.dxdq(uz0), dtype = np.float)
+        (r1,r2,r3,Uz) = self.model(self.q, uz0)
+        return np.array(Uz, dtype = np.float)
 
     def parallel_finite_diff(self, i):
 
@@ -230,13 +225,16 @@ class CombinedJacobian(object):
         return np.array([xx], dtype = np.float)
 
     def parallel_finite_diff(self, i):
-        q_iplus = self.q.copy()
-        q_iminus = self.q.copy()
-        q_iplus[i] += self.delta_q[i] / 2
-        q_iminus[i] -= self.delta_q[i] / 2
+        if i < 6:
+            q_iplus = self.q.copy()
+            q_iminus = self.q.copy()
+            q_iplus[i] += self.delta_q[i] / 2
+            q_iminus[i] -= self.delta_q[i] / 2
 
-        f_plus = self.f(q_iplus)
-        f_minus = self.f(q_iminus)
+            f_plus = self.f(q_iplus)
+            f_minus = self.f(q_iminus)
+        if i >= 6 & i < 9:
+
 
         return (f_plus - f_minus) / self.delta_q[i]
 
