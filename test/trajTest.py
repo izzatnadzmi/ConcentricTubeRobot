@@ -134,7 +134,7 @@ if __name__ == "__main__":
     q_start = np.array([0.0101, 0.0101, 0.0101, -a_ans, -a_ans, -a_ans])  # a_ans, a_ans, a_ans
     uz_0 = np.array([0.0, 0.0, 0.0])
     (r1,r2,r3,Uz) = model(q_start, uz_0)
-    # plot_3D(ax, r1, r2, r3)
+    plot_3D(ax, r1, r2, r3)
     start_pos = r1[-1]
     print(start_pos)
 

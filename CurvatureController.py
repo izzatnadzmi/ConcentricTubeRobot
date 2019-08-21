@@ -1,9 +1,6 @@
 '''
     Author: Izzat Kamarudzaman
     Python Version: 3.7.2
-    Adapted from Matlab code by Mohsen Khadem
-
-    Code visualises three-tubed concentric tube continuum robot.
 '''
 
 import numpy as np
@@ -240,8 +237,8 @@ if __name__ == "__main__":
     # uz0_new = uz0_cont.run()
 
     runtime = time.time()
-    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.2, parallel=True, 
-                    jac_delta_uz=0.1, Kp_Uz=5).Uz_controlled_model()  # moving_CTR(q_static, uz0_new)
+    (r1,r2,r3,Uz) = UzController(q_static, uz0_start, plot=True, dt=0.5, parallel=True, 
+                    jac_delta_uz=0.1, Kp_Uz=3).Uz_controlled_model()  # moving_CTR(q_static, uz0_new) 5kp
     print("\nUzRunTime:", time.time()-runtime)
 
     plot_3D(ax, r1, r2, r3, 'final position')
@@ -257,9 +254,9 @@ if __name__ == "__main__":
     #     ax.plot([xb], [yb], [zb], 'w')
 
     ax.legend()
-    ax.set_xlabel('tube1')
-    ax.set_ylabel('tube2')
-    ax.set_zlabel('tube3')
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
 
     plt.show()
 

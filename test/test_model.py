@@ -1,9 +1,6 @@
 '''
     Author: Izzat Kamarudzaman
     Python Version: 3.7.2
-    Adapted from Matlab code by Mohsen Khadem
-
-    Code visualises three-tubed concentric tube continuum robot.
 '''
 
 import os
@@ -26,7 +23,7 @@ def moving_CTR(q, uz_0):  #, settings):
     # (l, l_k, E, J, I, G, Ux, Uy, n) = settings
 
     l = 1e-3 * np.array([300, 300, 300])                # length of tubes
-    l_k = 1e-3 * np.array([100, 100, 100])              # length of the curved part of tubes
+    l_k = 1e-3 * np.array([200, 200, 200])              # length of the curved part of tubes
 
     # physical parameters
     E = np.array([ 5e+10, 5e+10, 5e+10])   # E stiffness
@@ -240,9 +237,9 @@ def segmenting(E,Ux,Uy,l,B,l_k):  # -> [L,d1,E,Ux,Uy,I,G,J]
 
 def plot_3D(ax, r1, r2, r3, label_str=''):
     ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1)
-    ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2, linestyle='--')
-    ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3, linestyle=':', label=label_str)
-    ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2], label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
+    ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2)  # , linestyle='--'
+    ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3, label=label_str)  # , linestyle=':'
+    ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2])  # , label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
 
 
 def rad(deg):
@@ -274,26 +271,26 @@ if __name__ == "__main__":
     q = np.array([0, 0, 0, 0, 0, 0])  #inputs
     (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
     print(" Execution time: %s seconds " % (time.time() - start_time))
-    plot_3D(ax, r1, r2, r3, 'tube all 0')
+    plot_3D(ax, r1, r2, r3, 'Tube 1')  # 'tube all 0')
 
     print('r1', r1,'\nr2', r2,'\nr3', r3,'\nUz', Uz)
 
     q = np.array([0, 0, 0, rad(120), rad(120), rad(120)])  #inputs
     (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
-    plot_3D(ax, r1, r2, r3, 'all 2pi/3')
+    plot_3D(ax, r1, r2, r3, 'Tube 2')  # all 2pi/3')
 
     q = np.array([0, 0, 0, rad(240), rad(240), rad(240)])  #inputs
     (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
-    plot_3D(ax, r1, r2, r3, 'all -2pi/3')
+    plot_3D(ax, r1, r2, r3, 'Tube 3')  # 'all -2pi/3')
 
     q = np.array([0, 0, 0, 0, rad(120), rad(240)])  #inputs
     (r1,r2,r3,Uz) = moving_CTR(q, uz_0)  #, settings)
-    plot_3D(ax, r1, r2, r3, '0, pi, -pi')
+    plot_3D(ax, r1, r2, r3, 'Combined tubes')  # '0, pi, -pi')
 
     ax.legend()
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z ')
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
     # plt.axis('equal')
     # ax.set_aspect('equal')
 

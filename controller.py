@@ -1,9 +1,7 @@
 '''
     Author: Izzat Kamarudzaman
     Python Version: 3.7.2
-    Adapted from Matlab code by Mohsen Khadem
 
-    Code visualises three-tubed concentric tube continuum robot.
 '''
 
 import numpy as np
@@ -276,8 +274,8 @@ class Controller(object):
             plt.plot(tt, q_des_pos[4], label='q_a2')
             plt.plot(tt, q_des_pos[5], label='q_a3')
             # plt.title('q inputs')
-            plt.set_xlabel('Timeline')
-            plt.set_ylabel('q inputs')
+            plt.xlabel('Timeline')
+            plt.ylabel('q inputs')
             plt.legend()
             # plt.savefig('qin.png')
 
@@ -287,8 +285,8 @@ class Controller(object):
             plt.plot(tt, delta_x[1], label='y')
             plt.plot(tt, delta_x[2], label='z')
             # plt.title('delta_x')
-            plt.set_xlabel('Timeline')
-            plt.set_ylabel('Error (m)')
+            plt.xlabel('Timeline')
+            plt.ylabel('Error (m)')
             plt.legend()
             # plt.savefig('delx.png')
 
@@ -301,8 +299,8 @@ class Controller(object):
             plt.plot(tt, delta_q[4], label='del_q.a2')
             plt.plot(tt, delta_q[5], label='del_q.a3')
             # plt.title('delta_q')
-            plt.set_xlabel('Timeline')
-            plt.set_ylabel('q input delta')
+            plt.xlabel('Timeline')
+            plt.ylabel('q input delta')
             plt.legend()
             # plt.savefig('delq.png')
             
@@ -311,8 +309,8 @@ class Controller(object):
             plt.plot(tt, x_des_vel[1, :], label='y')
             plt.plot(tt, x_des_vel[2, :], label='z')
             # plt.title('x_des_vel trajectory')
-            plt.set_xlabel('Timeline')
-            plt.set_ylabel('Unit Velocity')
+            plt.xlabel('Timeline')
+            plt.ylabel('Unit Velocity')
             plt.legend()
             # plt.savefig('xvel.png')
 
@@ -328,8 +326,8 @@ class Controller(object):
                 plt.plot(tt, x_sim_pos[1, :], label='Y traj. w/o Uz Controller')
                 plt.plot(tt, x_sim_pos[2, :], label='Z traj. w/o Uz Controller')
             # plt.title('x_des_pos/x_cur_pos trajectory')
-            plt.set_xlabel('Timeline')
-            plt.set_ylabel('Euclidean distance (m)')
+            plt.xlabel('Timeline')
+            plt.ylabel('Euclidean distance (m)')
             plt.legend()
             # plt.savefig('xtraj.png')
 
@@ -346,17 +344,17 @@ if __name__ == "__main__":
 # MAIN
     a_ans = (2*np.pi)/4
     total_time = 1
-    dt = 0.001
+    dt = 0.0001
     Uzdt = 0.1
     UzControl = True
     jac_del_q = 1e-3
     Kp_x = 110
     damped_lsq = 0.0
-    perturbed = False
+    perturbed = True
     parallel = True
     Uz_parallel = False
     helical = False
-    sim = True
+    sim = False
     print('Damped least square for Jacobian:', damped_lsq)
 
     no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now

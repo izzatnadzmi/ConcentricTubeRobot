@@ -239,7 +239,7 @@ class CTRobotModel(object):
 
 
 def plot_3D(ax, r1, r2, r3, label_str=''):
-    ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)
+    ax.plot3D(r1[:,0], r1[:,1], r1[:,2], linewidth=1, label=label_str)  # , c=(1, 1, 0, 0.1)
     ax.plot3D(r2[:,0], r2[:,1], r2[:,2], linewidth=2)
     ax.plot3D(r3[:,0], r3[:,1], r3[:,2], linewidth=3)
     ax.scatter(r1[-1,0], r1[-1,1], r1[-1,2])#, label='({:03f},{:03f},{:03f})'.format(r1[-1,0], r1[-1,1], r1[-1,2]))
@@ -261,11 +261,12 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    # initial value of twist
+    # # initial value of twist
     uz_0 = np.array([0.0, 0.0, 0.0])  # .transpose()
+    # # q = np.array([0, -3, -3, 0, 0, 0])  #inputs [BBBaaa]
     q = np.array([.2, 0, 0, np.pi, np.pi, 0])  #inputs [BBBaaa]
 
-    # no_of_tubes = 3  # ONLY WORKS FOR 3 TUBES for now
+    # no_of_tubes = 3  # ONLY MADE FOR 3 TUBES for now
     initial_q = [-0.2858, -0.2025, -0.0945, 0, 0, 0]
     tubes_length =[431, 332, 174]
     curve_length=[103, 113, 134]
@@ -289,14 +290,19 @@ if __name__ == "__main__":
     print('Uz:\n', Uz)
     plot_3D(ax, r1, r2, r3, 'tube1')
 
-    ax.legend()
-    plt.show()
+    # rotate = (2*np.pi)/3
 
     # # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
-    # q = np.array([0, 0, 0, 0, np.pi, np.pi])  #inputs
+    # q = np.array([0, 0, 0, rotate, rotate, rotate])  #inputs
     # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
     # print('Uz:\n', Uz)
-    # # plot_3D(ax, r1, r2, r3, 'tube2')
+    # plot_3D(ax, r1, r2, r3, 'tube2')
+
+    # # uz_0 = np.array([[np.pi, np.pi, np.pi]]).transpose()
+    # q = np.array([0, 0, 0, -rotate, -rotate, -rotate])  #inputs
+    # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
+    # print('Uz:\n', Uz)
+    # plot_3D(ax, r1, r2, r3, 'tube2')
 
     # q = np.array([0, 0, 0, 0, np.pi, 0])  #inputs
     # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
@@ -307,3 +313,6 @@ if __name__ == "__main__":
     # (r1,r2,r3,Uz) = ctr.moving_CTR(q, uz_0)
     # print('Uz:\n', Uz)
     # # plot_3D(ax, r1, r2, r3, 'tube4')
+
+    ax.legend()
+    plt.show()
