@@ -1,7 +1,9 @@
 """
-    Generates a quintic polynomial trajectory.
+    Author: Izzat Kamarudzaman
+    Python Version: 3.7.2
 
-    Author: Daniel Ingram (daniel-s-ingram)
+    Generates a quintic\quadratic\cubic polynomial, or linear trajectory.
+    Adopted from code by Daniel Ingram (daniel-s-ingram)
 """
 
 import numpy as np

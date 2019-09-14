@@ -2,6 +2,8 @@
     Author: Izzat Kamarudzaman
     Python Version: 3.7.2
 
+    Main code for CTR system. Calls CTR model and trajectory generator.
+    Also contains classes for Jacobian Linearisation and Controller.
 '''
 
 import numpy as np

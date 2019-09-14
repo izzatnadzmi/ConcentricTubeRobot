@@ -1,6 +1,8 @@
 '''
     Author: Izzat Kamarudzaman
     Python Version: 3.7.2
+
+    End curvature BVP controller.
 '''
 
 import numpy as np
