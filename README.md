@@ -21,7 +21,9 @@
     Generates a quintic\quadratic\cubic polynomial, or linear trajectory.
 
 
-## Required libraries
+## Requirements
+
+- Python 3.7.x (2.7 is not supported)
 
 - pathos
 
@@ -44,3 +46,9 @@
 2. Install required, and missing libraries.
 
 3. Execute python script.
+
+
+## License
+
+MIT
+
