@@ -1,5 +1,9 @@
 # ConcentricTubeRobot
 
+Concentric Tube Continuum Robot distal-end tip position controller cascaded with BVP controller.
+
+Model based on [A geometrically exact model for externally loaded concentric-tube continuum robots](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3091283/)
+
 ## Documentation
 
 1. controller.py
