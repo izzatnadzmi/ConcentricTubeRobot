@@ -1,6 +1,6 @@
 # ConcentricTubeRobot
 
-## Documentation.
+## Documentation
 
 1. controller.py
 
