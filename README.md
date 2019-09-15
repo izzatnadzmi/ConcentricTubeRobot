@@ -22,7 +22,9 @@
 ## How to use
 
 1. Clone the repo.
+
 > git clone https://github.com/izzatnadzmi/ConcentricTubeRobot.git
+
 > cd ConcentricTubeRobot/
 
 2. Install required, and missing libraries.
