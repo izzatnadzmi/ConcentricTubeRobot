@@ -2,6 +2,7 @@
 
 Concentric Tube Continuum Robot distal-end tip position controller cascaded with BVP controller.
 
+Final MSc Dissertation: [Closed-loop System for Concentric-Tube Continuum Robots](CTR__Final.pdf)  
 Model based on [A geometrically exact model for externally loaded concentric-tube continuum robots](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3091283/)
 
 ## Documentation
